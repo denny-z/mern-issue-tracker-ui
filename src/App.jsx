@@ -1,11 +1,65 @@
-const continents = ['Africa','America','Asia','Australia','Europe'];
-const helloContinets = Array.from(continents, (c) => `Hello ${c}!`);
-const message = helloContinets.join(' ');
+class IssueFilter extends React.Component {
+  render() {
+    return (
+      <div>Placeholder for issue filter.</div>
+    );
+  }
+}
 
-const element = (
-  <div title="Outer div">
-    <h1>{message}</h1>
-  </div>
-)
+class IssueRow extends React.Component {
+  render() {
+    const style = this.props.rowStyle;
+    return (
+      <tr>
+        <td style={style}>{this.props.issueId}</td>
+        <td style={style}>{this.props.issueTitle}</td>
+      </tr>
+    )
+  }
+}
 
-ReactDOM.render(element, document.getElementById('content'));
+class IssueTable extends React.Component {
+  render() {
+    const rowStyle = {border: "1px solid silver", padding: 4};
+
+    return (
+      <table style={{borderCollapse: "collapse"}}>
+        <thead>
+          <tr>
+            <th style={rowStyle}>ID</th>
+            <th style={rowStyle}>Title</th>
+          </tr>
+        </thead>
+        <tbody>
+          <IssueRow issueId={1} issueTitle="Error in conslole while clicking Add" rowStyle={rowStyle}></IssueRow>
+          <IssueRow issueId={2} issueTitle="Missing bottom border on panel" rowStyle={rowStyle}></IssueRow>
+        </tbody>
+      </table>
+    );
+  }
+}
+
+class IssueAdd extends React.Component {
+  render() {
+    return (
+      <div>Placeholder for issue add form.</div>
+    );
+  }
+}
+
+class IssueList extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Issue Tracker</h1>
+        <IssueFilter />
+        <hr />
+        <IssueTable />
+        <hr />
+        <IssueAdd />
+      </React.Fragment>
+    );
+  }
+}
+
+ReactDOM.render(<IssueList />, document.getElementById('content'));
