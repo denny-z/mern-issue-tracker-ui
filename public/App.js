@@ -57,12 +57,8 @@ var IssueRow = /*#__PURE__*/function (_React$Component2) {
   _createClass(IssueRow, [{
     key: "render",
     value: function render() {
-      var style = this.props.rowStyle;
-      return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-        style: style
-      }, this.props.issueId), /*#__PURE__*/React.createElement("td", {
-        style: style
-      }, this.props.issueTitle));
+      var issue = this.props.issue;
+      return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, issue.id), /*#__PURE__*/React.createElement("td", null, issue.status), /*#__PURE__*/React.createElement("td", null, issue.owner), /*#__PURE__*/React.createElement("td", null, issue.created.toDateString()), /*#__PURE__*/React.createElement("td", null, issue.effort), /*#__PURE__*/React.createElement("td", null, issue.due ? issue.due.toDateString() : ''), /*#__PURE__*/React.createElement("td", null, issue.title));
     }
   }]);
 
@@ -83,26 +79,30 @@ var IssueTable = /*#__PURE__*/function (_React$Component3) {
   _createClass(IssueTable, [{
     key: "render",
     value: function render() {
-      var rowStyle = {
-        border: "1px solid silver",
-        padding: 4
-      };
+      var issues = [{
+        id: 1,
+        status: 'New',
+        owner: 'Ravan',
+        effort: 5,
+        created: new Date('2018-08-15'),
+        due: undefined,
+        title: 'Error in console when clicking Add'
+      }, {
+        id: 2,
+        status: 'Assigned',
+        owner: 'Eddie',
+        effort: 14,
+        created: new Date('2018-08-16'),
+        due: new Date('2018-08-30'),
+        title: 'Missing bottom border on panel'
+      }];
       return /*#__PURE__*/React.createElement("table", {
-        style: {
-          borderCollapse: "collapse"
-        }
-      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
-        style: rowStyle
-      }, "ID"), /*#__PURE__*/React.createElement("th", {
-        style: rowStyle
-      }, "Title"))), /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement(IssueRow, {
-        issueId: 1,
-        issueTitle: "Error in conslole while clicking Add",
-        rowStyle: rowStyle
-      }), /*#__PURE__*/React.createElement(IssueRow, {
-        issueId: 2,
-        issueTitle: "Missing bottom border on panel",
-        rowStyle: rowStyle
+        className: "bordered-table"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "ID"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Owner"), /*#__PURE__*/React.createElement("th", null, "Created At"), /*#__PURE__*/React.createElement("th", null, "Effort"), /*#__PURE__*/React.createElement("th", null, "Due"), /*#__PURE__*/React.createElement("th", null, "Title"))), /*#__PURE__*/React.createElement("tbody", null, issues.map(function (issue) {
+        return /*#__PURE__*/React.createElement(IssueRow, {
+          key: issue.id,
+          issue: issue
+        });
       })));
     }
   }]);
