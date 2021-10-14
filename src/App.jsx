@@ -14,7 +14,7 @@ const initialIssues = [
     effort: 5,
     created: new Date('2018-08-15'),
     due: undefined,
-    title: 'Error in console when clicking Add'
+    title: 'Error in console when clicking Add',
   },
   {
     id: 2,
@@ -22,15 +22,23 @@ const initialIssues = [
     owner: 'Eddie',
     effort: 14,
     created: new Date('2018-08-16'), due: new Date('2018-08-30'),
-    title: 'Missing bottom border on panel'
+    title: 'Missing bottom border on panel',
   }
 ];
 
+const sampleIssue = {
+  status: 'New',
+  owner: 'Pieta',
+  title: 'Completion date should be optional',
+};
 
 class IssueTable extends React.Component {
   constructor() {
     super();
     this.state = { issues: [] };
+    setTimeout(() => {
+      this.createIssue(sampleIssue);
+    }, 2000);
   }
 
   componentDidMount() {
@@ -41,6 +49,14 @@ class IssueTable extends React.Component {
     setTimeout(() => {
       this.setState({ issues: initialIssues });
     }, 500);
+  }
+
+  createIssue(issue) {
+    issue.id = this.state.issues.length + 1;
+    issue.created = new Date();
+    const newIssues = this.state.issues.slice();
+    newIssues.push(issue);
+    this.setState({ issues: newIssues });
   }
 
   render() {
