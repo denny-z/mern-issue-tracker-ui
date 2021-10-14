@@ -43,15 +43,83 @@ var IssueFilter = /*#__PURE__*/function (_React$Component) {
   return IssueFilter;
 }(React.Component);
 
-var IssueRow = /*#__PURE__*/function (_React$Component2) {
-  _inherits(IssueRow, _React$Component2);
+var initialIssues = [{
+  id: 1,
+  status: 'New',
+  owner: 'Ravan',
+  effort: 5,
+  created: new Date('2018-08-15'),
+  due: undefined,
+  title: 'Error in console when clicking Add'
+}, {
+  id: 2,
+  status: 'Assigned',
+  owner: 'Eddie',
+  effort: 14,
+  created: new Date('2018-08-16'),
+  due: new Date('2018-08-30'),
+  title: 'Missing bottom border on panel'
+}];
 
-  var _super2 = _createSuper(IssueRow);
+var IssueTable = /*#__PURE__*/function (_React$Component2) {
+  _inherits(IssueTable, _React$Component2);
+
+  var _super2 = _createSuper(IssueTable);
+
+  function IssueTable() {
+    var _this;
+
+    _classCallCheck(this, IssueTable);
+
+    _this = _super2.call(this);
+    _this.state = {
+      issues: []
+    };
+    return _this;
+  }
+
+  _createClass(IssueTable, [{
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      this.loadData();
+    }
+  }, {
+    key: "loadData",
+    value: function loadData() {
+      var _this2 = this;
+
+      setTimeout(function () {
+        _this2.setState({
+          issues: initialIssues
+        });
+      }, 500);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return /*#__PURE__*/React.createElement("table", {
+        className: "bordered-table"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "ID"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Owner"), /*#__PURE__*/React.createElement("th", null, "Created At"), /*#__PURE__*/React.createElement("th", null, "Effort"), /*#__PURE__*/React.createElement("th", null, "Due"), /*#__PURE__*/React.createElement("th", null, "Title"))), /*#__PURE__*/React.createElement("tbody", null, this.state.issues.map(function (issue) {
+        return /*#__PURE__*/React.createElement(IssueRow, {
+          key: issue.id,
+          issue: issue
+        });
+      })));
+    }
+  }]);
+
+  return IssueTable;
+}(React.Component);
+
+var IssueRow = /*#__PURE__*/function (_React$Component3) {
+  _inherits(IssueRow, _React$Component3);
+
+  var _super3 = _createSuper(IssueRow);
 
   function IssueRow() {
     _classCallCheck(this, IssueRow);
 
-    return _super2.apply(this, arguments);
+    return _super3.apply(this, arguments);
   }
 
   _createClass(IssueRow, [{
@@ -63,51 +131,6 @@ var IssueRow = /*#__PURE__*/function (_React$Component2) {
   }]);
 
   return IssueRow;
-}(React.Component);
-
-var IssueTable = /*#__PURE__*/function (_React$Component3) {
-  _inherits(IssueTable, _React$Component3);
-
-  var _super3 = _createSuper(IssueTable);
-
-  function IssueTable() {
-    _classCallCheck(this, IssueTable);
-
-    return _super3.apply(this, arguments);
-  }
-
-  _createClass(IssueTable, [{
-    key: "render",
-    value: function render() {
-      var issues = [{
-        id: 1,
-        status: 'New',
-        owner: 'Ravan',
-        effort: 5,
-        created: new Date('2018-08-15'),
-        due: undefined,
-        title: 'Error in console when clicking Add'
-      }, {
-        id: 2,
-        status: 'Assigned',
-        owner: 'Eddie',
-        effort: 14,
-        created: new Date('2018-08-16'),
-        due: new Date('2018-08-30'),
-        title: 'Missing bottom border on panel'
-      }];
-      return /*#__PURE__*/React.createElement("table", {
-        className: "bordered-table"
-      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "ID"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Owner"), /*#__PURE__*/React.createElement("th", null, "Created At"), /*#__PURE__*/React.createElement("th", null, "Effort"), /*#__PURE__*/React.createElement("th", null, "Due"), /*#__PURE__*/React.createElement("th", null, "Title"))), /*#__PURE__*/React.createElement("tbody", null, issues.map(function (issue) {
-        return /*#__PURE__*/React.createElement(IssueRow, {
-          key: issue.id,
-          issue: issue
-        });
-      })));
-    }
-  }]);
-
-  return IssueTable;
 }(React.Component);
 
 var IssueAdd = /*#__PURE__*/function (_React$Component4) {
