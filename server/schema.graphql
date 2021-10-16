@@ -1,7 +1,19 @@
-  type Query {
-    about: String!
-  }
-  type Mutation {
-    setAboutMessage(message: String!): String
-  }
-  
+type Issue {
+  id: Int!
+  title: String!
+  status: String!
+  owner: String
+  effort: Int
+  created: String!
+  due: String
+}
+
+# Top level declarations
+
+type Query {
+  about: String!
+  issuesList: [Issue!]
+}
+type Mutation {
+  setAboutMessage(message: String!): String
+}
