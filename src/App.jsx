@@ -35,9 +35,9 @@ function IssueRow(props) {
       <td>{ issue.id }</td>
       <td>{ issue.status }</td>
       <td>{ issue.owner }</td>
-      <td>{ issue.created }</td>
+      <td>{ issue.created.toDateString() }</td>
       <td>{ issue.effort }</td>
-      <td>{ issue.due }</td>
+      <td>{ issue.due ? issue.due.toDateString() : ' ' }</td>
       <td>{ issue.title }</td>
     </tr>
   )
@@ -73,6 +73,13 @@ class IssueAdd extends React.Component {
   }
 }
 
+const dateRegexp = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
+
+function jsonDateReciever(key, value) {
+  if(dateRegexp.test(value)) return new Date(value);
+  return value;
+}
+
 class IssueList extends React.Component {
   constructor() {
     super();
@@ -104,7 +111,8 @@ class IssueList extends React.Component {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
     });
-    const result = await response.json();
+    const textResult = await response.text();
+    const result = JSON.parse(textResult, jsonDateReciever);
 
     this.setState({ issues: result.data.issuesList });
   }

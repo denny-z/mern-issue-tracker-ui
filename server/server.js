@@ -1,12 +1,21 @@
 const express = require('express');
 const fs = require('fs');
 const { ApolloServer } = require('apollo-server-express');
+const { GraphQLScalarType } = require('graphql');
 
 const app = express();
 const filesMiddleware = express.static('public');
 app.use('/', filesMiddleware);
 
 const typeDefs = fs.readFileSync('./server/schema.graphql', 'utf-8');
+
+const GraphQLDate = new GraphQLScalarType({
+  name: 'GraphQLDate',
+  description: 'This is JSON date',
+  serialize(value) {
+    return value.toISOString();
+  },
+});
 
 let aboutMessage = 'Hello GraphQL world!';
 
@@ -42,6 +51,7 @@ const resolvers = {
   Mutation: {
     setAboutMessage,
   },
+  GraphQLDate,
 };
 
 const server = new ApolloServer({
