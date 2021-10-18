@@ -1,9 +1,16 @@
 scalar GraphQLDate
 
+enum StatusType {
+  New
+  Assigned
+  Fixed
+  Closed
+}
+
 type Issue {
   id: Int!
   title: String!
-  status: String!
+  status: StatusType!
   owner: String
   effort: Int
   created: GraphQLDate!
@@ -13,7 +20,7 @@ type Issue {
 input IssueInputs {
   title: String!
   "Optional. Set's 'New' when not provided."
-  status: String
+  status: StatusType = New
   owner: String
   effort: Int
   due: GraphQLDate
