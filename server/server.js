@@ -2,6 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const { ApolloServer } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
+const { Kind, parseValue } = require('graphql/language');
+const { parse } = require('path');
 
 const app = express();
 const filesMiddleware = express.static('public');
@@ -15,6 +17,12 @@ const GraphQLDate = new GraphQLScalarType({
   serialize(value) {
     return value.toISOString();
   },
+  parseLiteral(ast) {
+    return (ast.kind == Kind.STRING) ? new Date(ast.value) : undefined;
+  },
+  parseValue(value) {
+    return new Date(value);
+  },
 });
 
 let aboutMessage = 'Hello GraphQL world!';
@@ -23,7 +31,15 @@ function setAboutMessage(_, { message }) {
   return aboutMessage = message;
 };
 
-const initialIssues = [
+function addIssue(_, { issue }) {
+  issue.created = new Date();
+  issue.id = issuesDB.length + 1;
+  if(issue.status == undefined) issue.status = 'New';
+  issuesDB.push(issue);
+  return issue;
+};
+
+const issuesDB = [
   {
     id: 1,
     status: 'New',
@@ -46,10 +62,11 @@ const initialIssues = [
 const resolvers = {
   Query: {
     about: () => aboutMessage,
-    issuesList: () => initialIssues,
+    issuesList: () => issuesDB,
   },
   Mutation: {
     setAboutMessage,
+    addIssue,
   },
   GraphQLDate,
 };
