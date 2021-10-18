@@ -6,6 +6,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -86,7 +88,7 @@ var IssueAdd = /*#__PURE__*/function (_React$Component2) {
       var issue = {
         owner: form.owner.value,
         title: form.title.value,
-        status: 'New'
+        due: new Date(new Date().getTime() + IssueAdd.DAYS_10)
       };
       this.props.createIssue(issue);
       form.owner.value = '';
@@ -111,6 +113,8 @@ var IssueAdd = /*#__PURE__*/function (_React$Component2) {
 
   return IssueAdd;
 }(React.Component);
+
+_defineProperty(IssueAdd, "DAYS_10", 1000 * 60 * 60 * 24 * 10);
 
 var dateRegexp = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
 
@@ -191,15 +195,42 @@ var IssueList = /*#__PURE__*/function (_React$Component3) {
     }()
   }, {
     key: "createIssue",
-    value: function createIssue(issue) {
-      issue.id = this.state.issues.length + 1;
-      issue.created = new Date();
-      var newIssues = this.state.issues.slice();
-      newIssues.push(issue);
-      this.setState({
-        issues: newIssues
-      });
-    }
+    value: function () {
+      var _createIssue = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(issue) {
+        var query;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                query = "\n      mutation {\n        addIssue(issue: {\n          title: \"".concat(issue.title, "\"\n          owner: \"").concat(issue.owner, "\"\n          due: \"").concat(issue.due.toISOString(), "\"\n        }) {\n          id\n        }\n      }\n    ");
+                _context2.next = 3;
+                return fetch('/graphql', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    query: query
+                  })
+                });
+
+              case 3:
+                this.loadData();
+
+              case 4:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function createIssue(_x) {
+        return _createIssue.apply(this, arguments);
+      }
+
+      return createIssue;
+    }()
   }, {
     key: "render",
     value: function render() {

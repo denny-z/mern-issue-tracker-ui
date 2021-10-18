@@ -44,6 +44,8 @@ function IssueRow(props) {
 }
 
 class IssueAdd extends React.Component {
+  static DAYS_10 = 1000 * 60 * 60 * 24 * 10;
+
   constructor() {
     super();
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -55,7 +57,7 @@ class IssueAdd extends React.Component {
     const issue = {
       owner: form.owner.value,
       title: form.title.value,
-      status: 'New',
+      due: new Date(new Date().getTime() + IssueAdd.DAYS_10),
     };
     this.props.createIssue(issue);
     form.owner.value = '';
@@ -76,7 +78,7 @@ class IssueAdd extends React.Component {
 const dateRegexp = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
 
 function jsonDateReciever(key, value) {
-  if(dateRegexp.test(value)) return new Date(value);
+  if (dateRegexp.test(value)) return new Date(value);
   return value;
 }
 
@@ -117,12 +119,26 @@ class IssueList extends React.Component {
     this.setState({ issues: result.data.issuesList });
   }
 
-  createIssue(issue) {
-    issue.id = this.state.issues.length + 1;
-    issue.created = new Date();
-    const newIssues = this.state.issues.slice();
-    newIssues.push(issue);
-    this.setState({ issues: newIssues });
+  async createIssue(issue) {
+    const query = `
+      mutation {
+        addIssue(issue: {
+          title: "${issue.title}"
+          owner: "${issue.owner}"
+          due: "${issue.due.toISOString()}"
+        }) {
+          id
+        }
+      }
+    `;
+
+    await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    })
+
+    this.loadData();
   }
 
   render() {
