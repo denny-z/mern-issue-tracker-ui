@@ -2,8 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
-const { Kind, parseValue } = require('graphql/language');
-const { parse } = require('path');
+const { Kind } = require('graphql/language');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 const filesMiddleware = express.static('public');
@@ -48,13 +48,20 @@ function validateIssue(issue) {
   }
 }
 
-function addIssue(_, { issue }) {
+const issuesCollectionName = 'issues';
+
+async function addIssue(_, { issue }) {
   validateIssue(issue);
   issue.created = new Date();
-  issue.id = issuesDB.length + 1;
+
+  issue.id = await getNextSequence(issuesCollectionName);
   if (issue.status == undefined) issue.status = 'New';
-  issuesDB.push(issue);
-  return issue;
+
+  const issues = db.collection(issuesCollectionName);
+
+  const result = await issues.insertOne(issue);
+  const savedIssue = await issues.findOne({ _id: result.insertedId });
+  return savedIssue;
 };
 
 const issuesDB = [
@@ -80,7 +87,7 @@ const issuesDB = [
 const resolvers = {
   Query: {
     about: () => aboutMessage,
-    issuesList: () => issuesDB,
+    issuesList,
   },
   Mutation: {
     setAboutMessage,
@@ -100,6 +107,37 @@ const server = new ApolloServer({
 
 server.applyMiddleware({ app, path: '/graphql' });
 
-app.listen(3000, function () {
-  console.log('app started');
-});
+const dbUrl = "mongodb+srv://dbUser:90yd51pl6n2XbqZX@cluster0.oetds.mongodb.net/issuetracker?retryWrites=true&w=majority";
+let db;
+
+async function issuesList() {
+  return db.collection('issues').find({}).toArray();
+}
+
+async function connectToDB() {
+  const client = new MongoClient(dbUrl, { useNewUrlParser: true });
+  await client.connect();
+  console.log('Connected to MongoDB');
+  db = client.db();
+}
+
+async function getNextSequence(name) {
+  const result = await db.collection('counters').findOneAndUpdate(
+    { _id: name },
+    { $inc: { current: 1 } },
+    { returnOriginal: false },
+  );
+  return result.value.current;
+}
+
+(async () => {
+  try {
+    await connectToDB();
+
+    app.listen(3000, function () {
+      console.log('app started');
+    });
+  } catch (e) {
+    console.error('ERROR:\n', e);
+  }
+})();
