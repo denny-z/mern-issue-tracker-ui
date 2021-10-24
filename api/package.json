@@ -1,0 +1,20 @@
+{
+  "name": "pro-mern-stack-2-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon -e js,graphql server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/plugin-transform-arrow-functions": "^7.14.5",
+    "apollo-server-express": "^2.25.2",
+    "express": "^4.17.1",
+    "graphql": "^0.13.2",
+    "mongodb": "^3.7.3",
+    "nodemon": "^2.0.13"
+  }
+}

@@ -6,10 +6,8 @@ const { Kind } = require('graphql/language');
 const { MongoClient } = require('mongodb');
 
 const app = express();
-const filesMiddleware = express.static('public');
-app.use('/', filesMiddleware);
 
-const typeDefs = fs.readFileSync('./server/schema.graphql', 'utf-8');
+const typeDefs = fs.readFileSync('./schema.graphql', 'utf-8');
 
 const GraphQLDate = new GraphQLScalarType({
   name: 'GraphQLDate',
@@ -115,7 +113,7 @@ async function getNextSequence(name) {
     await connectToDB();
 
     app.listen(3000, function () {
-      console.log('app started');
+      console.log('API server started on port 3000');
     });
   } catch (e) {
     console.error('ERROR:\n', e);
