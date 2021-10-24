@@ -4,6 +4,7 @@ const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
 const app = express();
 
@@ -85,7 +86,7 @@ const server = new ApolloServer({
 
 server.applyMiddleware({ app, path: '/graphql' });
 
-const dbUrl = "mongodb+srv://dbUser:90yd51pl6n2XbqZX@cluster0.oetds.mongodb.net/issuetracker?retryWrites=true&w=majority";
+const dbUrl = process.env.DB_URL || 'mongodb://localhost/issuetracker';
 let db;
 
 async function issuesList() {
@@ -108,12 +109,14 @@ async function getNextSequence(name) {
   return result.value.current;
 }
 
+const port = process.env.API_SERVER_PORT || 3000;
+
 (async () => {
   try {
     await connectToDB();
 
-    app.listen(3000, function () {
-      console.log('API server started on port 3000');
+    app.listen(port, function () {
+      console.log(`API server started on port ${port}`);
     });
   } catch (e) {
     console.error('ERROR:\n', e);
