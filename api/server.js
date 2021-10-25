@@ -84,9 +84,7 @@ const server = new ApolloServer({
   }
 });
 
-const enableCors = (process.env.ENABLE_CORS || 'true') == 'true';
-console.log('CORS setting:', enableCors);
-server.applyMiddleware({ app, path: '/graphql', cors: enableCors });
+server.applyMiddleware({ app, path: '/graphql' });
 
 const dbUrl = process.env.DB_URL || 'mongodb://localhost/issuetracker';
 let db;
