@@ -114,7 +114,7 @@ server.applyMiddleware({ app, path: '/graphql' });
 
 const port = process.env.API_SERVER_PORT || 3000;
 
-(async () => {
+(async function start() {
   try {
     await connectToDB();
 
@@ -124,4 +124,4 @@ const port = process.env.API_SERVER_PORT || 3000;
   } catch (e) {
     console.error('ERROR:\n', e);
   }
-})();
+}());
