@@ -1,9 +1,12 @@
 const { MongoClient } = require('mongodb');
 
-const url = 'mongodb+srv://dbUser:90yd51pl6n2XbqZX@cluster0.oetds.mongodb.net/issuetracker?retryWrites=true&w=majority';
+const dbUrl = process.env.DB_URL;
+if (!dbUrl) {
+  throw new Error('Env variable DB_URL is not provided');
+}
 
 function testWithCallbacks(errCallback) {
-  const client = new MongoClient(url, { useNewUrlParser: true });
+  const client = new MongoClient(dbUrl, { useNewUrlParser: true });
   client.connect((connErr) => {
     if (connErr) {
       errCallback(connErr);
@@ -38,7 +41,7 @@ function testWithCallbacks(errCallback) {
 }
 
 async function testWithAsync() {
-  const client = new MongoClient(url, { useNewUrlParser: true });
+  const client = new MongoClient(dbUrl, { useNewUrlParser: true });
   try {
     await client.connect();
 
