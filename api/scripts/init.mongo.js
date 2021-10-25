@@ -1,3 +1,6 @@
+/* global db print */
+/* eslint no-restricted-globals: "off" */
+
 db.issues.deleteMany({});
 
 const issuesDB = [
@@ -15,9 +18,10 @@ const issuesDB = [
     status: 'Assigned',
     owner: 'Eddie',
     effort: 14,
-    created: new Date('2018-08-16'), due: new Date('2018-08-30'),
+    created: new Date('2018-08-16'),
+    due: new Date('2018-08-30'),
     title: 'Missing bottom border on panel',
-  }
+  },
 ];
 
 db.issues.insertMany(issuesDB);
@@ -25,7 +29,7 @@ const count = db.issues.countDocuments();
 print('Inserted', count, 'issues');
 
 db.counters.deleteMany({});
-db.counters.insertOne({_id: 'issues', current: count});
+db.counters.insertOne({ _id: 'issues', current: count });
 
 db.issues.createIndex({ id: 1 }, { unique: true });
 db.issues.createIndex({ status: 1 });

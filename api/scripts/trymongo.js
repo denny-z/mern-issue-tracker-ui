@@ -1,12 +1,12 @@
 const { MongoClient } = require('mongodb');
 
-const url = "mongodb+srv://dbUser:90yd51pl6n2XbqZX@cluster0.oetds.mongodb.net/issuetracker?retryWrites=true&w=majority"
+const url = 'mongodb+srv://dbUser:90yd51pl6n2XbqZX@cluster0.oetds.mongodb.net/issuetracker?retryWrites=true&w=majority';
 
 function testWithCallbacks(errCallback) {
   const client = new MongoClient(url, { useNewUrlParser: true });
-  client.connect((err, client) => {
-    if (err) {
-      errCallback(err);
+  client.connect((connErr) => {
+    if (connErr) {
+      errCallback(connErr);
       return;
     }
     console.log('Connected to MongoDB');
@@ -14,28 +14,28 @@ function testWithCallbacks(errCallback) {
     const collection = client.db().collection('employees');
 
     const newEmployee = { id: 8, name: 'Callback', age: 15 };
-    collection.insertOne(newEmployee, (err, result) => {
-      if (err) {
+    collection.insertOne(newEmployee, (insertErr, result) => {
+      if (insertErr) {
         client.close();
-        errCallback(err);
+        errCallback(insertErr);
         return;
       }
 
       console.log('Result of insert', result.insertedId);
 
-      collection.find({ _id: result.insertedId }).toArray((err, documents) => {
-        if (err) {
+      collection.find({ _id: result.insertedId }).toArray((findErr, documents) => {
+        if (findErr) {
           client.close();
-          errCallback(err);
+          errCallback(findErr);
           return;
         }
 
         console.log('Result of find is', documents);
         client.close();
-      })
-    })
+      });
+    });
   });
-};
+}
 
 async function testWithAsync() {
   const client = new MongoClient(url, { useNewUrlParser: true });
@@ -59,12 +59,12 @@ async function testWithAsync() {
       client.close();
     }
   }
-};
+}
 
-// testWithCallbacks((err) => {
-//   if(err) {
-//     console.error(err);
-//   }
-// });
+testWithCallbacks((err) => {
+  if (err) {
+    console.error(err);
+  }
 
-testWithAsync();
+  testWithAsync();
+});
