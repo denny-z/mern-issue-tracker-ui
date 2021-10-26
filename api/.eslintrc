@@ -1,7 +1,7 @@
 {
   "extends": "airbnb-base",
   "env": {
-    "node": "true"
+    "node": true
   },
   "rules": {
     "no-console": "off"
