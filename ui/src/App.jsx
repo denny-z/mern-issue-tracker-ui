@@ -153,7 +153,7 @@ class IssueList extends React.Component {
     if (data) this.setState({ issues: data.issuesList });
   }
 
-  async createIssue({ issue }) {
+  async createIssue(issue) {
     const query = `
       mutation addIssue($issue: IssueInputs!) {
         addIssue(issue: $issue) {
