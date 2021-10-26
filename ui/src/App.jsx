@@ -3,6 +3,7 @@
 /* globals React ReactDOM */
 /* eslint "react/jsx-no-undef": "off" */
 /* eslint "react/no-multi-comp": "off" */
+/* globals React ReactDOM PropTypes */
 
 // eslint-disable-next-line react/prefer-stateless-function
 class IssueFilter extends React.Component {
@@ -88,6 +89,10 @@ class IssueAdd extends React.Component {
     );
   }
 }
+
+IssueAdd.propTypes = {
+  createIssue: PropTypes.func.isRequired,
+};
 
 const dateRegexp = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
 
