@@ -1,9 +1,9 @@
-/* globals React */
+import React from 'react';
 
-import graphQLFetch from "./graphQLFetch.js";
-import IssueAdd from "./IssueAdd.jsx";
-import IssueFilter from "./IssueFilter.jsx";
-import IssueTable from "./IssueTable.jsx";
+import graphQLFetch from './graphQLFetch.js';
+import IssueAdd from './IssueAdd.jsx';
+import IssueFilter from './IssueFilter.jsx';
+import IssueTable from './IssueTable.jsx';
 
 export default class IssueList extends React.Component {
   constructor() {
@@ -32,8 +32,7 @@ export default class IssueList extends React.Component {
     `;
 
     const data = await graphQLFetch(query);
-    if (data)
-      this.setState({ issues: data.issuesList });
+    if (data) this.setState({ issues: data.issuesList });
   }
 
   async createIssue(issue) {
@@ -46,8 +45,7 @@ export default class IssueList extends React.Component {
     `;
 
     const data = await graphQLFetch(query, { issue });
-    if (data)
-      this.loadData();
+    if (data) this.loadData();
   }
 
   render() {

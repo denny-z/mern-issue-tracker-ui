@@ -1,6 +1,5 @@
 {
   "extends": "airbnb-base",
-  "ignorePatterns": "public",
   "env": {
     "node": true
   },

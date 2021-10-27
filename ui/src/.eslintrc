@@ -5,6 +5,6 @@
   },
   "rules": {
     "react/prop-types": "off",
-    "import-extensions": [ "error", "always", { "ignorePackages": true } ]
+    "import/extensions": [ "error", "always", { "ignorePackages": true } ]
   }
 }
