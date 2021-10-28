@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function IssueTable(props) {
   const { issues } = props;
@@ -36,7 +37,7 @@ function IssueRow(props) {
       <td>{issue.effort}</td>
       <td>{issue.due ? issue.due.toDateString() : ' '}</td>
       <td>{issue.title}</td>
-      <td><a href={`/#/edit/${issue.id}`}>Edit</a></td>
+      <td><Link to={`/edit/${issue.id}`}>Edit</Link></td>
     </tr>
   );
 }
