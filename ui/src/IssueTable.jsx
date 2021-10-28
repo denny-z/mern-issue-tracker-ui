@@ -14,6 +14,7 @@ export default function IssueTable(props) {
           <th>Effort</th>
           <th>Due</th>
           <th>Title</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -35,6 +36,7 @@ function IssueRow(props) {
       <td>{issue.effort}</td>
       <td>{issue.due ? issue.due.toDateString() : ' '}</td>
       <td>{issue.title}</td>
+      <td><a href={`/#/edit/${issue.id}`}>Edit</a></td>
     </tr>
   );
 }
