@@ -3,8 +3,10 @@ const { getNextSequence, getDb } = require('./db');
 
 const issuesCollectionName = 'issues';
 
-async function list() {
-  return getDb().collection(issuesCollectionName).find({}).toArray();
+async function list(_, { status }) {
+  const filter = {};
+  if (status) filter.status = status;
+  return getDb().collection(issuesCollectionName).find(filter).toArray();
 }
 
 function validate(issue) {

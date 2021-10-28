@@ -30,7 +30,7 @@ input IssueInputs {
 
 type Query {
   about: String!
-  issuesList: [Issue!]
+  issuesList(status: StatusType): [Issue!]
 }
 type Mutation {
   setAboutMessage(message: String!): String
