@@ -10,6 +10,7 @@ enum StatusType {
 type Issue {
   id: Int!
   title: String!
+  description: String
   status: StatusType!
   owner: String
   effort: Int
@@ -19,6 +20,7 @@ type Issue {
 
 input IssueInputs {
   title: String!
+  description: String
   "Optional. Set's 'New' when not provided."
   status: StatusType = New
   owner: String
@@ -31,6 +33,7 @@ input IssueInputs {
 type Query {
   about: String!
   issuesList(status: StatusType): [Issue!]
+  issue(id: Int!): Issue!
 }
 type Mutation {
   setAboutMessage(message: String!): String

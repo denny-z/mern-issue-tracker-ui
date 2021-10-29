@@ -3,6 +3,10 @@ const { getNextSequence, getDb } = require('./db');
 
 const issuesCollectionName = 'issues';
 
+async function get(_, { id }) {
+  return getDb().collection(issuesCollectionName).findOne({ id });
+}
+
 async function list(_, { status }) {
   const filter = {};
   if (status) filter.status = status;
@@ -37,4 +41,4 @@ async function add(_, { issue }) {
   return savedIssue;
 }
 
-module.exports = { add, list };
+module.exports = { add, list, get };

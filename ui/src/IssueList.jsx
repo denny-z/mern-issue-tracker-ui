@@ -1,10 +1,12 @@
 import URLSearchParams from 'url-search-params';
 import React from 'react';
+import { Route } from 'react-router-dom';
 
 import graphQLFetch from './graphQLFetch.js';
 import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
+import IssueDetail from './IssueDetail.jsx';
 
 export default class IssueList extends React.Component {
   constructor() {
@@ -74,6 +76,8 @@ export default class IssueList extends React.Component {
         <IssueTable issues={issues} />
         <hr />
         <IssueAdd createIssue={this.createIssue} />
+        <hr />
+        <Route path="/issues/:id" component={IssueDetail} />
       </React.Fragment>
     );
   }
