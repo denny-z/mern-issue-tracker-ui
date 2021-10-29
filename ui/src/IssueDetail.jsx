@@ -16,7 +16,7 @@ export default class IssueDetail extends React.Component {
   componentDidUpdate(prevProps) {
     const { match: { params: { id: prevId } } } = prevProps;
     const { match: { params: { id: newId } } } = this.props;
-    if (+newId !== +prevId) this.loadData(newId);
+    if (newId !== prevId) this.loadData(newId);
   }
 
   async loadData(id) {
@@ -38,10 +38,11 @@ export default class IssueDetail extends React.Component {
 
     return (
       <React.Fragment>
-        This is a placeholder for IssueDetail. Loaded ID
-        {` ${id}`}
+        <h3>Description</h3>
+        (Issue ID:
+        {` ${id}.)`}
         <br />
-        <pre>{description}</pre>
+        <pre>{description || 'N/A'}</pre>
       </React.Fragment>
     );
   }

@@ -67,6 +67,7 @@ export default class IssueList extends React.Component {
 
   render() {
     const { issues } = this.state;
+    const { match } = this.props;
 
     return (
       <React.Fragment>
@@ -77,7 +78,7 @@ export default class IssueList extends React.Component {
         <hr />
         <IssueAdd createIssue={this.createIssue} />
         <hr />
-        <Route path="/issues/:id" component={IssueDetail} />
+        <Route path={`${match.path}/:id`} component={IssueDetail} />
       </React.Fragment>
     );
   }
