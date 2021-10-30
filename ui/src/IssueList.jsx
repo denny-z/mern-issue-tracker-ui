@@ -30,13 +30,26 @@ export default class IssueList extends React.Component {
   async loadData() {
     const { location: { search } } = this.props;
     const params = new URLSearchParams(search);
-
     const vars = {};
+
     if (params.get('status')) vars.status = params.get('status');
 
+    const effortMin = parseInt(params.get('effortMin'), 10);
+    if (!Number.isNaN(effortMin)) vars.effortMin = effortMin;
+    const effortMax = parseInt(params.get('effortMax'), 10);
+    if (!Number.isNaN(effortMax)) vars.effortMax = effortMax;
+
     const query = `
-      query IssueList($status: StatusType){
-        issuesList(status: $status) {
+      query IssueList(
+        $status: StatusType,
+        $effortMin: Int,
+        $effortMax: Int
+      ){
+        issuesList(
+          status: $status,
+          effortMin: $effortMin,
+          effortMax: $effortMax
+        ) {
           id
           title
           owner
