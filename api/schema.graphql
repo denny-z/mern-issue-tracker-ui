@@ -32,7 +32,11 @@ input IssueInputs {
 
 type Query {
   about: String!
-  issuesList(status: StatusType): [Issue!]
+  issuesList(
+    status: StatusType
+    effortMin: Int
+    effortMax: Int
+  ): [Issue!]
   issue(id: Int!): Issue!
 }
 type Mutation {

@@ -7,9 +7,17 @@ async function get(_, { id }) {
   return getDb().collection(issuesCollectionName).findOne({ id });
 }
 
-async function list(_, { status }) {
+async function list(_, { status, effortMin, effortMax }) {
   const filter = {};
+
   if (status) filter.status = status;
+
+  if (effortMin !== undefined || effortMax !== undefined) {
+    filter.effort = {};
+    if (effortMin !== undefined) filter.effort.$gte = effortMin;
+    if (effortMax !== undefined) filter.effort.$lte = effortMax;
+  }
+
   return getDb().collection(issuesCollectionName).find(filter).toArray();
 }
 
