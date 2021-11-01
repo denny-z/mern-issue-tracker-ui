@@ -28,6 +28,18 @@ input IssueInputs {
   due: GraphQLDate
 }
 
+"""Inputs for issueUpdate: all are optional. Whichever specified well be set to the given value,
+undefined fields will remain unmodified.
+"""
+input IssueUpdateInputs {
+  title: String,
+  description: String,
+  status: StatusType,
+  owner: String,
+  effort: Int,
+  due: GraphQLDate
+}
+
 # Top level declarations
 
 type Query {
@@ -42,4 +54,5 @@ type Query {
 type Mutation {
   setAboutMessage(message: String!): String
   addIssue(issue: IssueInputs!): Issue!
+  updateIssue(id: Int!, changes: IssueUpdateInputs!): Issue!
 }

@@ -3,8 +3,12 @@ const { getNextSequence, getDb } = require('./db');
 
 const issuesCollectionName = 'issues';
 
+function getIssuesCollection() {
+  return getDb().collection(issuesCollectionName);
+}
+
 async function get(_, { id }) {
-  return getDb().collection(issuesCollectionName).findOne({ id });
+  return getIssuesCollection().findOne({ id });
 }
 
 async function list(_, { status, effortMin, effortMax }) {
@@ -18,7 +22,7 @@ async function list(_, { status, effortMin, effortMax }) {
     if (effortMax !== undefined) filter.effort.$lte = effortMax;
   }
 
-  return getDb().collection(issuesCollectionName).find(filter).toArray();
+  return getIssuesCollection().find(filter).toArray();
 }
 
 function validate(issue) {
@@ -42,11 +46,30 @@ async function add(_, { issue }) {
   newIssue.id = await getNextSequence(issuesCollectionName);
   if (newIssue.status === undefined) newIssue.status = 'New';
 
-  const issues = getDb().collection(issuesCollectionName);
+  const issues = getIssuesCollection();
 
   const result = await issues.insertOne(newIssue);
   const savedIssue = await issues.findOne({ _id: result.insertedId });
   return savedIssue;
 }
 
-module.exports = { add, list, get };
+async function update(_, { id, changes }) {
+  const issues = getIssuesCollection();
+
+  if (changes.title || changes.status || changes.owner) {
+    const issue = await issues.findOne({ id });
+    Object.assign(issue, changes);
+    validate(issue);
+  }
+  await issues.updateOne({ id }, { $set: changes });
+  const savedIssue = issues.findOne({ id });
+  console.log(savedIssue);
+  return savedIssue;
+}
+
+module.exports = {
+  add,
+  list,
+  get,
+  update,
+};
