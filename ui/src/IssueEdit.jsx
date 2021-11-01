@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import graphQLFetch from './graphQLFetch.js';
 
 export default class IssueEdit extends React.Component {
@@ -8,11 +9,19 @@ export default class IssueEdit extends React.Component {
     this.onChange = this.onChange.bind(this);
     this.onEffortChange = this.onEffortChange.bind(this);
 
-    this.state = { issue: {}, isLoading: false, isError: false };
+    this.state = { issue: {} };
   }
 
   componentDidMount() {
     this.loadData();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { match: { params: { id: prevId } } } = prevProps;
+    const { match: { params: { id } } } = this.props;
+    if (id !== prevId) {
+      this.loadData();
+    }
   }
 
   onChange(event) {
@@ -46,11 +55,11 @@ export default class IssueEdit extends React.Component {
         }
       }
     `;
-    this.setState({ isLoading: true });
+
     const data = await graphQLFetch(query, { id });
 
     if (!data) {
-      this.setState({ issue: {}, isError: true });
+      this.setState({ issue: {} });
     } else {
       const { issue } = data;
       issue.title = issue.title != null ? issue.title : '';
@@ -59,9 +68,8 @@ export default class IssueEdit extends React.Component {
       issue.owner = issue.owner != null ? issue.owner : '';
       issue.effort = issue.effort != null ? issue.effort.toString() : '';
       issue.due = issue.due != null ? issue.due.toDateString() : '';
-      this.setState({ issue, isError: false });
+      this.setState({ issue });
     }
-    this.setState({ isLoading: false });
   }
 
   handleSubmit(event) {
@@ -73,22 +81,22 @@ export default class IssueEdit extends React.Component {
   }
 
   render() {
+    const { issue: { id } } = this.state;
+    const { match: { params: { id: propsId } } } = this.props;
+
+    if (id == null) {
+      // eslint-disable-next-line eqeqeq
+      if (id != propsId) {
+        return (<h3>{`Issue with ID ${propsId} not found.`}</h3>);
+      }
+      return null;
+    }
+
     const {
       issue: {
-        id, title, description, status, owner, effort, created, due,
+        title, description, status, owner, effort, created, due,
       },
-      isLoading,
-      isError,
     } = this.state;
-    if (id == null) {
-      if (isLoading) {
-        return (<div>Loading...</div>);
-      }
-      if (isError) {
-        return (<div>Sorry, there is an error...</div>);
-      }
-      return '';
-    }
 
     return (
       <div>
@@ -154,6 +162,11 @@ export default class IssueEdit extends React.Component {
             </tbody>
           </table>
         </form>
+        <div>
+          <Link to={`/edit/${id - 1}`}>Prev</Link>
+          {' | '}
+          <Link to={`/edit/${id + 1}`}>Next</Link>
+        </div>
       </div>
     );
   }
