@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+
 import graphQLFetch from './graphQLFetch.js';
+import NumInput from './NumInput.jsx';
 
 export default class IssueEdit extends React.Component {
   constructor() {
     super();
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
-    this.onEffortChange = this.onEffortChange.bind(this);
 
     this.state = { issue: {} };
   }
@@ -24,19 +25,13 @@ export default class IssueEdit extends React.Component {
     }
   }
 
-  onChange(event) {
-    const { name, value } = event.target;
+  onChange(event, naturalValue) {
+    const { name, value: textValue } = event.target;
+    const value = naturalValue === undefined ? textValue : naturalValue;
+
     this.setState(prevState => ({
       issue: { ...prevState.issue, [name]: value },
     }));
-  }
-
-  // TODO: Add validation of "due" input field similar to current.
-  onEffortChange(event) {
-    const { value } = event.target;
-    if (value.match(/^\d*$/)) {
-      this.onChange(event);
-    }
   }
 
   async loadData() {
@@ -66,7 +61,6 @@ export default class IssueEdit extends React.Component {
       issue.description = issue.description != null ? issue.description : '';
       issue.status = issue.status != null ? issue.status : '';
       issue.owner = issue.owner != null ? issue.owner : '';
-      issue.effort = issue.effort != null ? issue.effort.toString() : '';
       issue.due = issue.due != null ? issue.due.toDateString() : '';
       this.setState({ issue });
     }
@@ -75,7 +69,7 @@ export default class IssueEdit extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
     // eslint-disable-next-line no-console
-    console.log('Fake submitting...');
+    console.warn('Fake submitting...');
     // eslint-disable-next-line no-console
     console.log(this.state);
   }
@@ -128,7 +122,7 @@ export default class IssueEdit extends React.Component {
               <tr>
                 <td>Effort:</td>
                 <td>
-                  <input type="text" name="effort" value={effort} onChange={this.onEffortChange} />
+                  <NumInput name="effort" value={effort} onChange={this.onChange} key={id} />
                 </td>
               </tr>
               <tr>
