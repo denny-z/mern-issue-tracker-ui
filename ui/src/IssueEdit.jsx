@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import graphQLFetch from './graphQLFetch.js';
 import NumInput from './NumInput.jsx';
 import DateInput from './DateInput.jsx';
+import TextInput from './TextInput.jsx';
 
 export default class IssueEdit extends React.Component {
   constructor() {
@@ -63,16 +64,7 @@ export default class IssueEdit extends React.Component {
 
     const data = await graphQLFetch(query, { id });
 
-    if (!data) {
-      this.setState({ issue: {}, invalidFields: {} });
-    } else {
-      const { issue } = data;
-      issue.title = issue.title != null ? issue.title : '';
-      issue.description = issue.description != null ? issue.description : '';
-      issue.status = issue.status != null ? issue.status : '';
-      issue.owner = issue.owner != null ? issue.owner : '';
-      this.setState({ issue, invalidFields: {} });
-    }
+    this.setState({ issue: data ? data.issue : {}, invalidFields: {} });
   }
 
   handleSubmit(event) {
@@ -135,7 +127,7 @@ export default class IssueEdit extends React.Component {
               <tr>
                 <td>Owner:</td>
                 <td>
-                  <input type="text" name="owner" value={owner} onChange={this.onChange} />
+                  <TextInput key={id} tag="input" name="owner" value={owner} onChange={this.onChange} />
                 </td>
               </tr>
               <tr>
@@ -153,13 +145,15 @@ export default class IssueEdit extends React.Component {
               <tr>
                 <td>Title:</td>
                 <td>
-                  <input type="text" name="title" value={title} onChange={this.onChange} size={50} />
+                  <TextInput key={id} tag="input" name="title" value={title} onChange={this.onChange} size={50} />
                 </td>
               </tr>
               <tr>
                 <td>Description:</td>
                 <td>
-                  <textarea
+                  <TextInput
+                    key={id}
+                    tag="textarea"
                     name="description"
                     cols="50"
                     rows="8"
