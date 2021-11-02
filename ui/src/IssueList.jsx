@@ -14,6 +14,7 @@ export default class IssueList extends React.Component {
     this.state = { issues: [] };
     this.createIssue = this.createIssue.bind(this);
     this.closeIssue = this.closeIssue.bind(this);
+    this.deleteIssue = this.deleteIssue.bind(this);
   }
 
   componentDidMount() {
@@ -79,7 +80,7 @@ export default class IssueList extends React.Component {
     if (data) this.loadData();
   }
 
-  async closeIssue(issueId) {
+  async closeIssue(id) {
     const query = `
       mutation CloseIssue($id: Int!) {
         updateIssue(id: $id, changes: { status: Closed }) {
@@ -95,20 +96,39 @@ export default class IssueList extends React.Component {
       }
     `;
 
-    const data = await graphQLFetch(query, { id: issueId });
+    const data = await graphQLFetch(query, { id });
     if (data) {
       this.setState((prevState) => {
         const newList = [...prevState.issues];
-        const issueIndex = newList.findIndex(issue => issue.id === issueId);
+        const issueIndex = newList.findIndex(issue => issue.id === id);
         if (issueIndex === -1) {
           // eslint-disable-next-line no-alert
-          alert(`Looks like the list in not in sync. Was not able to find issue ID ${issueId}. Refreshing list...`);
+          alert(`Looks like the list in not in sync. Was not able to find issue ID ${id}. Refreshing list...`);
           this.loadData();
           return { issues: [] };
         }
         newList[issueIndex] = data.updateIssue;
         return { issues: newList };
       });
+    } else {
+      this.loadData();
+    }
+  }
+
+  async deleteIssue(id) {
+    const query = `
+      mutation DeleteIssue($id: Int!) {
+        deleteIssue(id: $id)
+      }
+    `;
+    const data = await graphQLFetch(query, { id });
+    if (data && data.deleteIssue) {
+      this.setState(prevState => ({ issues: prevState.issues.filter(issue => issue.id !== id) }));
+
+      const { location: { pathname, search }, history } = this.props;
+      if (pathname === `/issues/${id}`) {
+        history.push({ pathname: '/issues', search });
+      }
     } else {
       this.loadData();
     }
@@ -123,7 +143,7 @@ export default class IssueList extends React.Component {
         <h1>Issue Tracker</h1>
         <IssueFilter />
         <hr />
-        <IssueTable issues={issues} closeIssue={this.closeIssue} />
+        <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
         <hr />
         <IssueAdd createIssue={this.createIssue} />
         <hr />
