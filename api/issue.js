@@ -1,14 +1,19 @@
 const { UserInputError } = require('apollo-server-express');
 const { getNextSequence, getDb } = require('./db');
 
-const issuesCollectionName = 'issues';
+const collectionName = 'issues';
+const deletedCollectionName = 'deleted_issues';
 
-function getIssuesCollection() {
-  return getDb().collection(issuesCollectionName);
+function getCollection() {
+  return getDb().collection(collectionName);
+}
+
+function getDeletedCollection() {
+  return getDb().collection(deletedCollectionName);
 }
 
 async function get(_, { id }) {
-  return getIssuesCollection().findOne({ id });
+  return getCollection().findOne({ id });
 }
 
 async function list(_, { status, effortMin, effortMax }) {
@@ -22,7 +27,7 @@ async function list(_, { status, effortMin, effortMax }) {
     if (effortMax !== undefined) filter.effort.$lte = effortMax;
   }
 
-  return getIssuesCollection().find(filter).toArray();
+  return getCollection().find(filter).toArray();
 }
 
 function validate(issue) {
@@ -43,10 +48,10 @@ async function add(_, { issue }) {
   const newIssue = Object.assign({}, issue);
   newIssue.created = new Date();
 
-  newIssue.id = await getNextSequence(issuesCollectionName);
+  newIssue.id = await getNextSequence(collectionName);
   if (newIssue.status === undefined) newIssue.status = 'New';
 
-  const issues = getIssuesCollection();
+  const issues = getCollection();
 
   const result = await issues.insertOne(newIssue);
   const savedIssue = await issues.findOne({ _id: result.insertedId });
@@ -54,7 +59,7 @@ async function add(_, { issue }) {
 }
 
 async function update(_, { id, changes }) {
-  const issues = getIssuesCollection();
+  const issues = getCollection();
 
   if (changes.title || changes.status || changes.owner) {
     const issue = await issues.findOne({ id });
@@ -67,9 +72,26 @@ async function update(_, { id, changes }) {
   return savedIssue;
 }
 
+async function remove(_, { id }) {
+  const issues = getCollection();
+  const deletedIssues = getDeletedCollection();
+
+  const issue = await issues.findOne({ id });
+  if (!issue) return false;
+  issue.deleted = new Date();
+
+  const insertResult = await deletedIssues.insertOne(issue);
+  if (insertResult.insertedId) {
+    const deleteResult = await issues.removeOne({ id });
+    return deleteResult.deletedCount === 1;
+  }
+  return false;
+}
+
 module.exports = {
   add,
   list,
   get,
   update,
+  delete: remove,
 };
