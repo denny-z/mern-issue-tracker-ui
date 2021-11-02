@@ -31,7 +31,9 @@ export default class IssueAdd extends React.Component {
     return (
       <form onSubmit={this.handleSubmit}>
         <input type="text" name="owner" id="new-issue-owner" />
+        {' '}
         <input type="text" name="title" id="new-issue-title" />
+        {' '}
         <button type="submit">Add</button>
       </form>
     );
