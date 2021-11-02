@@ -67,12 +67,34 @@ export default class IssueEdit extends React.Component {
     this.setState({ issue: data ? data.issue : {}, invalidFields: {} });
   }
 
-  handleSubmit(event) {
+  async handleSubmit(event) {
     event.preventDefault();
-    // eslint-disable-next-line no-console
-    console.warn('Fake submitting...');
-    // eslint-disable-next-line no-console
-    console.log(this.state);
+    const { issue, invalidFields } = this.state;
+    if (Object.keys(invalidFields).length !== 0) return;
+
+    const query = `
+      mutation UpdateIssue($id: Int!, $changes: IssueUpdateInputs!) {
+        updateIssue(id: $id, changes: $changes) {
+          id
+          title
+          status
+          owner
+          effort
+          created
+          due
+          description
+        }
+      }
+    `;
+
+    const { id, created, ...changes } = issue;
+
+    const data = await graphQLFetch(query, { id, changes });
+    if (data) {
+      this.setState({ issue: data.updateIssue });
+      // eslint-disable-next-line no-alert
+      alert('Issue updated successully');
+    }
   }
 
   render() {
