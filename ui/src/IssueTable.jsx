@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, NavLink, withRouter } from 'react-router-dom';
 
 export default function IssueTable(props) {
-  const { issues } = props;
+  const { issues, closeIssue } = props;
 
   return (
     <table className="bordered-table">
@@ -19,13 +19,17 @@ export default function IssueTable(props) {
         </tr>
       </thead>
       <tbody>
-        {issues.map(issue => <IssueRow key={issue.id} issue={issue} />)}
+        {issues.map(issue => <IssueRow key={issue.id} issue={issue} closeIssue={closeIssue} />)}
       </tbody>
     </table>
   );
 }
 
-const IssueRow = withRouter(({ issue, location: { search } }) => {
+const IssueRow = withRouter(({
+  issue,
+  location: { search },
+  closeIssue,
+}) => {
   const selectLocation = { pathname: `/issues/${issue.id}`, search };
 
   return (
@@ -41,6 +45,8 @@ const IssueRow = withRouter(({ issue, location: { search } }) => {
         <Link to={`/edit/${issue.id}`}>Edit</Link>
         {' | '}
         <NavLink to={selectLocation}>Select</NavLink>
+        {' | '}
+        <button type="button" onClick={() => { closeIssue(issue.id); }} disabled={issue.status === 'Closed'}>Close</button>
       </td>
     </tr>
   );
