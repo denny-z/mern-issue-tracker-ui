@@ -1,7 +1,7 @@
 import URLSearchParams from 'url-search-params';
 import React from 'react';
 import { Route } from 'react-router-dom';
-
+import { Panel } from 'react-bootstrap';
 import graphQLFetch from './graphQLFetch.js';
 import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
@@ -140,8 +140,14 @@ export default class IssueList extends React.Component {
 
     return (
       <React.Fragment>
-        <IssueFilter />
-        <hr />
+        <Panel>
+          <Panel.Heading>
+            <Panel.Title toggle>Filter</Panel.Title>
+          </Panel.Heading>
+          <Panel.Body collapsible>
+            <IssueFilter />
+          </Panel.Body>
+        </Panel>
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
         <hr />
         <IssueAdd createIssue={this.createIssue} />
