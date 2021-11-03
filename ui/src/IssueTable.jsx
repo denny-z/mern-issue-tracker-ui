@@ -1,5 +1,8 @@
 import React from 'react';
 import { Link, NavLink, withRouter } from 'react-router-dom';
+import {
+  Button, Glyphicon, OverlayTrigger, Tooltip,
+} from 'react-bootstrap';
 
 export default function IssueTable(props) {
   const { issues, closeIssue, deleteIssue } = props;
@@ -45,6 +48,12 @@ const IssueRow = withRouter(({
   deleteIssue,
 }) => {
   const selectLocation = { pathname: `/issues/${issue.id}`, search };
+  const showCloseTooltip = (
+    <Tooltip id="close-tooltip">Close Issue</Tooltip>
+  );
+  const showDeleteTooltip = (
+    <Tooltip id="delete-tooltip">Delete Issue</Tooltip>
+  );
 
   return (
     <tr>
@@ -60,9 +69,17 @@ const IssueRow = withRouter(({
         {' | '}
         <NavLink to={selectLocation}>Select</NavLink>
         {' | '}
-        <button type="button" onClick={() => { closeIssue(issue.id); }} disabled={issue.status === 'Closed'}>Close</button>
+        <OverlayTrigger delay={1000} overlay={showCloseTooltip} placement="top">
+          <Button type="button" bsSize="xsmall" onClick={() => { closeIssue(issue.id); }} disabled={issue.status === 'Closed'}>
+            <Glyphicon glyph="remove" />
+          </Button>
+        </OverlayTrigger>
         {' | '}
-        <button type="button" onClick={() => { deleteIssue(issue.id); }}>Delete</button>
+        <OverlayTrigger delay={1000} overlay={showDeleteTooltip} placement="top">
+          <Button type="button" bsSize="xsmall" onClick={() => { deleteIssue(issue.id); }}>
+            <Glyphicon glyph="trash" />
+          </Button>
+        </OverlayTrigger>
       </td>
     </tr>
   );
