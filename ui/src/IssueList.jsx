@@ -1,7 +1,6 @@
 import URLSearchParams from 'url-search-params';
 import React from 'react';
 import { Route } from 'react-router-dom';
-import { Label } from 'react-bootstrap';
 
 import graphQLFetch from './graphQLFetch.js';
 import IssueAdd from './IssueAdd.jsx';
@@ -141,7 +140,6 @@ export default class IssueList extends React.Component {
 
     return (
       <React.Fragment>
-        <h1><Label>Issue Tracker</Label></h1>
         <IssueFilter />
         <hr />
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
