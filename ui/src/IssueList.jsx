@@ -8,10 +8,25 @@ import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 
+function getFilters(props) {
+  const { location: { search } } = props;
+  const params = new URLSearchParams(search);
+  const filter = {};
+
+  if (params.get('status')) filter.status = params.get('status');
+
+  const effortMin = parseInt(params.get('effortMin'), 10);
+  if (!Number.isNaN(effortMin)) filter.effortMin = effortMin;
+  const effortMax = parseInt(params.get('effortMax'), 10);
+  if (!Number.isNaN(effortMax)) filter.effortMax = effortMax;
+
+  return filter;
+}
+
 export default class IssueList extends React.Component {
   constructor() {
     super();
-    this.state = { issues: [] };
+    this.state = { issues: [], areFiltersExpanded: false };
     this.createIssue = this.createIssue.bind(this);
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
@@ -30,16 +45,11 @@ export default class IssueList extends React.Component {
   }
 
   async loadData() {
-    const { location: { search } } = this.props;
-    const params = new URLSearchParams(search);
-    const vars = {};
+    const vars = getFilters(this.props);
+    const { areFiltersExpanded: oldFiltersExpanded } = this.state;
 
-    if (params.get('status')) vars.status = params.get('status');
-
-    const effortMin = parseInt(params.get('effortMin'), 10);
-    if (!Number.isNaN(effortMin)) vars.effortMin = effortMin;
-    const effortMax = parseInt(params.get('effortMax'), 10);
-    if (!Number.isNaN(effortMax)) vars.effortMax = effortMax;
+    const areFiltersExpanded = oldFiltersExpanded || Object.keys(vars).length !== 0;
+    this.setState({ areFiltersExpanded });
 
     const query = `
       query IssueList(
@@ -135,13 +145,13 @@ export default class IssueList extends React.Component {
   }
 
   render() {
-    const { issues } = this.state;
+    const { issues, areFiltersExpanded } = this.state;
     const { match } = this.props;
 
     return (
       <React.Fragment>
-        <Panel>
-          <Panel.Heading>
+        <Panel expanded={areFiltersExpanded}>
+          <Panel.Heading onClick={() => this.setState({ areFiltersExpanded: !areFiltersExpanded })}>
             <Panel.Title toggle>Filter</Panel.Title>
           </Panel.Heading>
           <Panel.Body collapsible>
