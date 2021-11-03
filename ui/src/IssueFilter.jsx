@@ -1,6 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom';
 import URLSearchParams from 'url-search-params';
+import { Button } from 'react-bootstrap';
 
 // eslint-disable-next-line react/prefer-stateless-function
 class IssueFilter extends React.Component {
@@ -93,9 +94,9 @@ class IssueFilter extends React.Component {
           onChange={e => this.onEffortChange(e, 'effortMax')}
         />
         {' | '}
-        <button type="button" onClick={this.applyFilter}>Apply</button>
+        <Button type="button" bsStyle="primary" onClick={this.applyFilter}>Apply</Button>
         {' '}
-        <button type="button" onClick={this.showOriginalFilter} disabled={!isChanged}>Reset</button>
+        <Button type="button" onClick={this.showOriginalFilter} disabled={!isChanged}>Reset</Button>
       </div>
     );
   }
