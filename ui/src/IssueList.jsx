@@ -136,11 +136,12 @@ export default class IssueList extends React.Component {
 
   render() {
     const { issues } = this.state;
-    const { match } = this.props;
+    const { match, location } = this.props;
+    const hasFilter = location.search !== '';
 
     return (
       <React.Fragment>
-        <Panel>
+        <Panel defaultExpanded={hasFilter}>
           <Panel.Heading>
             <Panel.Title toggle>Filter</Panel.Title>
           </Panel.Heading>
