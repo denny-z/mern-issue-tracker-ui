@@ -196,7 +196,7 @@ export default class IssueEdit extends React.Component {
                 />
               </Col>
             </FormGroup>
-            <FormGroup>
+            <FormGroup validationState={invalidFields.title ? 'error' : null}>
               <Col sm={3} componentClass={ControlLabel}>Title</Col>
               <Col sm={9}>
                 <FormControl
@@ -206,6 +206,8 @@ export default class IssueEdit extends React.Component {
                   name="title"
                   value={title}
                   onChange={this.onChange}
+                  checkValid={value => value.trim().length >= 3}
+                  onValidityChange={this.onValidityChange}
                 />
               </Col>
             </FormGroup>
@@ -227,7 +229,7 @@ export default class IssueEdit extends React.Component {
             <FormGroup>
               <Col smOffset={3} sm={6}>
                 <ButtonToolbar>
-                  {/* TODO: Fix link, when there are selected filters in URL. 
+                  {/* TODO: Fix link, when there are selected filters in URL.
                   Can't just get "search" from "location". Need to take a look at "history" obj. */}
                   <LinkContainer to="/issues">
                     <Button bsStyle="link">Back</Button>

@@ -17,7 +17,17 @@ export default class TextInput extends Component {
   }
 
   onChange(e) {
-    this.setState({ value: e.target.value });
+    const { checkValid, onValidityChange } = this.props;
+    const { value } = e.target;
+
+    if (!checkValid || !onValidityChange) {
+      this.setState({ value });
+      return;
+    }
+
+    const isValid = checkValid(value);
+    this.setState({ value });
+    onValidityChange(e, isValid);
   }
 
   onBlur(e) {
@@ -28,7 +38,7 @@ export default class TextInput extends Component {
 
   render() {
     const { value } = this.state;
-    const { tag, ...props } = this.props;
+    const { tag, checkValid, onValidityChange, ...props } = this.props;
 
     return (
       React.createElement(tag, {
