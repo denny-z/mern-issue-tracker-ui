@@ -1,7 +1,9 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom';
 import URLSearchParams from 'url-search-params';
-import { Button } from 'react-bootstrap';
+import {
+  ButtonToolbar, Button, FormGroup, FormControl, ControlLabel, InputGroup,
+} from 'react-bootstrap';
 
 // eslint-disable-next-line react/prefer-stateless-function
 class IssueFilter extends React.Component {
@@ -72,31 +74,31 @@ class IssueFilter extends React.Component {
 
     return (
       <div>
-        Status
-        {' '}
-        <select value={status} onChange={this.onStatusChange}>
-          <option value="">All</option>
-          <option value="New">New</option>
-          <option value="Assigned">Assigned</option>
-          <option value="Closed">Closed</option>
-        </select>
-        {' | '}
-        Effort between
-        <input
-          size="5"
-          value={effortMin}
-          onChange={e => this.onEffortChange(e, 'effortMin')}
-        />
-        {' - '}
-        <input
-          size="5"
-          value={effortMax}
-          onChange={e => this.onEffortChange(e, 'effortMax')}
-        />
-        {' | '}
-        <Button type="button" bsStyle="primary" onClick={this.applyFilter}>Apply</Button>
-        {' '}
-        <Button type="button" onClick={this.showOriginalFilter} disabled={!isChanged}>Reset</Button>
+        <FormGroup>
+          <ControlLabel>Status:</ControlLabel>
+          <FormControl
+            componentClass="select"
+            value={status}
+            onChange={this.onStatusChange}
+          >
+            <option value="">All</option>
+            <option value="New">New</option>
+            <option value="Assigned">Assigned</option>
+            <option value="Closed">Closed</option>
+          </FormControl>
+        </FormGroup>
+        <FormGroup>
+          <ControlLabel>Effort between:</ControlLabel>
+          <InputGroup>
+            <FormControl value={effortMin} onChange={e => this.onEffortChange(e, 'effortMin')} />
+            <InputGroup.Addon>-</InputGroup.Addon>
+            <FormControl value={effortMax} onChange={e => this.onEffortChange(e, 'effortMax')} />
+          </InputGroup>
+        </FormGroup>
+        <ButtonToolbar>
+          <Button type="button" bsStyle="primary" onClick={this.applyFilter}>Apply</Button>
+          <Button type="button" onClick={this.showOriginalFilter} disabled={!isChanged}>Reset</Button>
+        </ButtonToolbar>
       </div>
     );
   }
