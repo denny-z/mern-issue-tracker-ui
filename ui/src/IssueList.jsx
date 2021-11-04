@@ -7,14 +7,25 @@ import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
+import Toast from './Toast.jsx';
 
 export default class IssueList extends React.Component {
   constructor() {
     super();
-    this.state = { issues: [] };
     this.createIssue = this.createIssue.bind(this);
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
+
+    this.showSuccess = this.showSuccess.bind(this);
+    this.showError = this.showError.bind(this);
+    this.dismissToast = this.dismissToast.bind(this);
+
+    this.state = {
+      issues: [],
+      toastVisible: false,
+      toastMessage: ' ',
+      toastType: 'info',
+    };
   }
 
   componentDidMount() {
@@ -63,7 +74,7 @@ export default class IssueList extends React.Component {
       }
     `;
 
-    const data = await graphQLFetch(query, vars);
+    const data = await graphQLFetch(query, vars, this.showError);
     if (data) this.setState({ issues: data.issuesList });
   }
 
@@ -76,7 +87,7 @@ export default class IssueList extends React.Component {
       }
     `;
 
-    const data = await graphQLFetch(query, { issue });
+    const data = await graphQLFetch(query, { issue }, this.showError);
     if (data) this.loadData();
   }
 
@@ -96,14 +107,13 @@ export default class IssueList extends React.Component {
       }
     `;
 
-    const data = await graphQLFetch(query, { id });
+    const data = await graphQLFetch(query, { id }, this.showError);
     if (data) {
       this.setState((prevState) => {
         const newList = [...prevState.issues];
         const issueIndex = newList.findIndex(issue => issue.id === id);
         if (issueIndex === -1) {
-          // eslint-disable-next-line no-alert
-          alert(`Looks like the list in not in sync. Was not able to find issue ID ${id}. Refreshing list...`);
+          this.showError(`Looks like the list in not in sync. Was not able to find issue ID ${id}. Refreshing list...`);
           this.loadData();
           return { issues: [] };
         }
@@ -121,7 +131,9 @@ export default class IssueList extends React.Component {
         deleteIssue(id: $id)
       }
     `;
-    const data = await graphQLFetch(query, { id });
+    const data = await graphQLFetch(query, { id }, this.showError);
+    this.showSuccess(`Deleted issue ${id} successfully.`);
+
     if (data && data.deleteIssue) {
       this.setState(prevState => ({ issues: prevState.issues.filter(issue => issue.id !== id) }));
 
@@ -134,10 +146,30 @@ export default class IssueList extends React.Component {
     }
   }
 
+  showSuccess(message) {
+    this.setState({
+      toastVisible: true, toastMessage: message, toastType: 'success',
+    });
+  }
+
+  showError(message) {
+    this.setState({
+      toastVisible: true, toastMessage: message, toastType: 'danger',
+    });
+  }
+
+  dismissToast() {
+    this.setState({
+      toastVisible: false,
+    });
+  }
+
   render() {
     const { issues } = this.state;
     const { match, location } = this.props;
     const hasFilter = location.search !== '';
+
+    const { toastVisible, toastType, toastMessage } = this.state;
 
     return (
       <React.Fragment>
@@ -152,6 +184,14 @@ export default class IssueList extends React.Component {
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
         <IssueAdd createIssue={this.createIssue} />
         <Route path={`${match.path}/:id`} component={IssueDetail} />
+
+        <Toast
+          needToShow={toastVisible}
+          onDismiss={this.dismissToast}
+          bsStyle={toastType}
+        >
+          {toastMessage}
+        </Toast>
       </React.Fragment>
     );
   }

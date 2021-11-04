@@ -1,11 +1,22 @@
 /* eslint-disable react/prefer-stateless-function */
 import React from 'react';
 import graphQLFetch from './graphQLFetch.js';
+import Toast from './Toast.jsx';
 
 export default class IssueDetail extends React.Component {
   constructor() {
     super();
-    this.state = { issue: {} };
+
+    this.showSuccess = this.showSuccess.bind(this);
+    this.showError = this.showError.bind(this);
+    this.dismissToast = this.dismissToast.bind(this);
+
+    this.state = {
+      issue: {},
+      toastVisible: false,
+      toastMessage: ' ',
+      toastType: 'info',
+    };
   }
 
   componentDidMount() {
@@ -29,8 +40,26 @@ export default class IssueDetail extends React.Component {
       }
     `;
 
-    const data = await graphQLFetch(query, { id });
+    const data = await graphQLFetch(query, { id }, this.showError);
     if (data) this.setState({ issue: data.issue });
+  }
+
+  showSuccess(message) {
+    this.setState({
+      toastVisible: true, toastMessage: message, toastType: 'success',
+    });
+  }
+
+  showError(message) {
+    this.setState({
+      toastVisible: true, toastMessage: message, toastType: 'danger',
+    });
+  }
+
+  dismissToast() {
+    this.setState({
+      toastVisible: false,
+    });
   }
 
   renderIssue() {
@@ -49,9 +78,19 @@ export default class IssueDetail extends React.Component {
 
   render() {
     const { issue: { id } } = this.state;
+
+    const { toastVisible, toastType, toastMessage } = this.state;
+
     return (
       <div>
         {id ? this.renderIssue() : ''}
+        <Toast
+          needToShow={toastVisible}
+          onDismiss={this.dismissToast}
+          bsStyle={toastType}
+        >
+          {toastMessage}
+        </Toast>
       </div>
     );
   }
