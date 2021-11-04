@@ -47,11 +47,12 @@ function NavBar() {
 
 function Footer() {
   return (
-    <small>
+    <React.Fragment>
+      <hr />
       <p className="text-center">
-        Full (almost) source code is from &quot;Pro MERN Stack&quot; Edition 2 book.
+        <small>All (almost) source code is from &quot;Pro MERN Stack&quot; Edition 2 book.</small>
       </p>
-    </small>
+    </React.Fragment>
   );
 }
 

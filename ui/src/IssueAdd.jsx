@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {
+  Button, Form, FormControl, FormGroup, ControlLabel,
+} from 'react-bootstrap';
 
 export default class IssueAdd extends React.Component {
   static get DAYS_10() {
@@ -29,13 +32,21 @@ export default class IssueAdd extends React.Component {
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <input type="text" name="owner" id="new-issue-owner" />
+      <Form inline onSubmit={this.handleSubmit}>
+        <FormGroup>
+          <ControlLabel>Owner:</ControlLabel>
+          {' '}
+          <FormControl type="text" name="owner" />
+        </FormGroup>
         {' '}
-        <input type="text" name="title" id="new-issue-title" />
+        <FormGroup>
+          <ControlLabel>Title:</ControlLabel>
+          {' '}
+          <FormControl type="text" name="title" />
+        </FormGroup>
         {' '}
-        <button type="submit">Add</button>
-      </form>
+        <Button bsStyle="primary" type="submit">Add</Button>
+      </Form>
     );
   }
 }

@@ -150,9 +150,7 @@ export default class IssueList extends React.Component {
           </Panel.Body>
         </Panel>
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
-        <hr />
         <IssueAdd createIssue={this.createIssue} />
-        <hr />
         <Route path={`${match.path}/:id`} component={IssueDetail} />
       </React.Fragment>
     );
