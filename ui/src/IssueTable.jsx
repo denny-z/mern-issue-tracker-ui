@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link, NavLink, withRouter } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import {
-  Button, Glyphicon, OverlayTrigger, Tooltip,
+  Button, Glyphicon, OverlayTrigger, Tooltip, Table,
 } from 'react-bootstrap';
+import { LinkContainer } from 'react-router-bootstrap';
 
 export default function IssueTable(props) {
   const { issues, closeIssue, deleteIssue } = props;
@@ -21,7 +22,7 @@ export default function IssueTable(props) {
   }
 
   return (
-    <table className="bordered-table">
+    <Table bordered condensed hover responsive>
       <thead>
         <tr>
           <th>ID</th>
@@ -37,7 +38,7 @@ export default function IssueTable(props) {
       <tbody>
         {issuesList}
       </tbody>
-    </table>
+    </Table>
   );
 }
 
@@ -54,8 +55,21 @@ const IssueRow = withRouter(({
   const showDeleteTooltip = (
     <Tooltip id="delete-tooltip">Delete Issue</Tooltip>
   );
+  const showEditTooltip = (
+    <Tooltip id="edit-tooltip">Edit Issue</Tooltip>
+  );
 
-  return (
+  const onClose = (e, id) => {
+    e.preventDefault();
+    closeIssue(id);
+  };
+
+  const onDelete = (e, id) => {
+    e.preventDefault();
+    deleteIssue(id);
+  };
+
+  const tableRow = (
     <tr>
       <td>{issue.id}</td>
       <td>{issue.status}</td>
@@ -65,22 +79,30 @@ const IssueRow = withRouter(({
       <td>{issue.due ? issue.due.toDateString() : ' '}</td>
       <td>{issue.title}</td>
       <td>
-        <Link to={`/edit/${issue.id}`}>Edit</Link>
-        {' | '}
-        <NavLink to={selectLocation}>Select</NavLink>
-        {' | '}
+        <LinkContainer to={`/edit/${issue.id}`}>
+          <OverlayTrigger delay={1000} overlay={showEditTooltip} placement="top">
+            <Button bsSize="xsmall">
+              <Glyphicon glyph="edit" />
+            </Button>
+          </OverlayTrigger>
+        </LinkContainer>
         <OverlayTrigger delay={1000} overlay={showCloseTooltip} placement="top">
-          <Button type="button" bsSize="xsmall" onClick={() => { closeIssue(issue.id); }} disabled={issue.status === 'Closed'}>
+          <Button type="button" bsSize="xsmall" onClick={(e) => { onClose(e, issue.id); }} disabled={issue.status === 'Closed'}>
             <Glyphicon glyph="remove" />
           </Button>
         </OverlayTrigger>
-        {' | '}
         <OverlayTrigger delay={1000} overlay={showDeleteTooltip} placement="top">
-          <Button type="button" bsSize="xsmall" onClick={() => { deleteIssue(issue.id); }}>
+          <Button type="button" bsSize="xsmall" onClick={(e) => { onDelete(e, issue.id); }}>
             <Glyphicon glyph="trash" />
           </Button>
         </OverlayTrigger>
       </td>
     </tr>
+  );
+
+  return (
+    <LinkContainer to={selectLocation}>
+      {tableRow}
+    </LinkContainer>
   );
 });
