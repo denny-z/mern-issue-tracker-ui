@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
+  Alert,
   Button, ButtonToolbar, Col, ControlLabel, Form, FormControl, FormGroup, Panel,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
@@ -15,8 +16,10 @@ export default class IssueEdit extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
     this.onValidityChange = this.onValidityChange.bind(this);
+    this.showValidation = this.showValidation.bind(this);
+    this.hideValidation = this.hideValidation.bind(this);
 
-    this.state = { issue: {}, invalidFields: {} };
+    this.state = { issue: {}, invalidFields: {}, needShowValidation: false };
   }
 
   componentDidMount() {
@@ -73,6 +76,7 @@ export default class IssueEdit extends React.Component {
 
   async handleSubmit(event) {
     event.preventDefault();
+    this.showValidation();
     const { issue, invalidFields } = this.state;
     if (Object.keys(invalidFields).length !== 0) return;
 
@@ -101,6 +105,14 @@ export default class IssueEdit extends React.Component {
     }
   }
 
+  showValidation() {
+    this.setState({ needShowValidation: true });
+  }
+
+  hideValidation() {
+    this.setState({ needShowValidation: false });
+  }
+
   render() {
     const { issue: { id } } = this.state;
     const { match: { params: { id: propsId } } } = this.props;
@@ -117,15 +129,16 @@ export default class IssueEdit extends React.Component {
       issue: {
         title, description, status, owner, effort, created, due,
       },
+      needShowValidation,
     } = this.state;
 
     const { invalidFields } = this.state;
     let validationMessage;
-    if (Object.keys(invalidFields).length !== 0) {
+    if (Object.keys(invalidFields).length !== 0 && needShowValidation) {
       validationMessage = (
-        <div className="error">
+        <Alert bsStyle="danger" onDismiss={this.hideValidation}>
           Please correct invalid fields before sumbitting.
-        </div>
+        </Alert>
       );
     }
 
@@ -238,10 +251,12 @@ export default class IssueEdit extends React.Component {
                 </ButtonToolbar>
               </Col>
             </FormGroup>
+            <FormGroup>
+              <Col smOffset={3} sm={6}>
+                {validationMessage}
+              </Col>
+            </FormGroup>
           </Form>
-          <Col smOffset={3} sm={6}>
-            {validationMessage}
-          </Col>
         </Panel.Body>
         <Panel.Footer>
           <Link to={`/edit/${id - 1}`}>Prev</Link>
