@@ -53,16 +53,12 @@ export default class DateInput extends Component {
 
   render() {
     const { value, isFocused, isValid } = this.state;
-    const { value: origValue, name } = this.props;
-    const className = (!isFocused && !isValid) ? 'invalid' : null;
+    const { value: origValue, onValidityChange, ...props } = this.props;
     const displayValue = (isFocused || !isValid) ? value : displayFormat(origValue);
 
     return (
       <input
-        type="text"
-        size={20}
-        name={name}
-        className={className}
+        {...props}
         value={displayValue}
         placeholder={isFocused ? 'yyyy-mm-dd' : null}
         onFocus={this.onFocus}

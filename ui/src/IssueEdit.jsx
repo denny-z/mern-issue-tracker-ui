@@ -1,5 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Button, ButtonToolbar, Col, ControlLabel, Form, FormControl, FormGroup, Panel,
+} from 'react-bootstrap';
+import { LinkContainer } from 'react-router-bootstrap';
 import graphQLFetch from './graphQLFetch.js';
 import NumInput from './NumInput.jsx';
 import DateInput from './DateInput.jsx';
@@ -126,78 +130,123 @@ export default class IssueEdit extends React.Component {
     }
 
     return (
-      <div>
-        <h3>{`Editing issue: ${id}`}</h3>
-        <form onSubmit={this.handleSubmit}>
-          <table>
-            <tbody>
-              <tr>
-                <td>Created:</td>
-                <td>{created.toDateString()}</td>
-              </tr>
-              <tr>
-                <td>Status:</td>
-                <td>
-                  <select name="status" value={status} onChange={this.onChange}>
-                    <option value="New">New</option>
-                    <option value="Assigned">Assigned</option>
-                    <option value="Fixed">Fixed</option>
-                    <option value="Closed">Closed</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Owner:</td>
-                <td>
-                  <TextInput key={id} tag="input" name="owner" value={owner} onChange={this.onChange} />
-                </td>
-              </tr>
-              <tr>
-                <td>Effort:</td>
-                <td>
-                  <NumInput key={id} name="effort" value={effort} onChange={this.onChange} />
-                </td>
-              </tr>
-              <tr>
-                <td>Due:</td>
-                <td>
-                  <DateInput key={id} name="due" value={due} onChange={this.onChange} onValidityChange={this.onValidityChange} />
-                </td>
-              </tr>
-              <tr>
-                <td>Title:</td>
-                <td>
-                  <TextInput key={id} tag="input" name="title" value={title} onChange={this.onChange} size={50} />
-                </td>
-              </tr>
-              <tr>
-                <td>Description:</td>
-                <td>
-                  <TextInput
-                    key={id}
-                    tag="textarea"
-                    name="description"
-                    cols="50"
-                    rows="8"
-                    value={description}
-                    onChange={this.onChange}
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td />
-                <td><button type="submit">Submit</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </form>
-        {validationMessage}
-        <div>
+      <Panel>
+        <Panel.Heading>
+          <Panel.Title>{`Editing issue: ${id}`}</Panel.Title>
+        </Panel.Heading>
+        <Panel.Body>
+          <Form horizontal onSubmit={this.handleSubmit}>
+            <FormGroup>
+              <Col sm={3} componentClass={ControlLabel}>Created</Col>
+              <Col sm={9}>
+                <FormControl.Static>{created.toDateString()}</FormControl.Static>
+              </Col>
+            </FormGroup>
+            <FormGroup>
+              <Col sm={3} componentClass={ControlLabel}>Status</Col>
+              <Col sm={9}>
+                <FormControl
+                  componentClass="select"
+                  name="status"
+                  value={status}
+                  onChange={this.onChange}
+                >
+                  <option value="New">New</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Fixed">Fixed</option>
+                  <option value="Closed">Closed</option>
+                </FormControl>
+              </Col>
+            </FormGroup>
+            <FormGroup>
+              <Col sm={3} componentClass={ControlLabel}>Owner</Col>
+              <Col sm={9}>
+                <FormControl
+                  componentClass={TextInput}
+                  key={id}
+                  tag="input"
+                  name="owner"
+                  value={owner}
+                  onChange={this.onChange}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup>
+              <Col sm={3} componentClass={ControlLabel}>Effort</Col>
+              <Col sm={9}>
+                <FormControl
+                  componentClass={NumInput}
+                  key={id}
+                  name="effort"
+                  value={effort}
+                  onChange={this.onChange}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup validationState={invalidFields.due ? 'error' : null}>
+              <Col sm={3} componentClass={ControlLabel}>Due</Col>
+              <Col sm={9}>
+                <FormControl
+                  componentClass={DateInput}
+                  key={id}
+                  name="due"
+                  value={due}
+                  onChange={this.onChange}
+                  onValidityChange={this.onValidityChange}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup>
+              <Col sm={3} componentClass={ControlLabel}>Title</Col>
+              <Col sm={9}>
+                <FormControl
+                  componentClass={TextInput}
+                  key={id}
+                  tag="input"
+                  name="title"
+                  value={title}
+                  onChange={this.onChange}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup>
+              <Col sm={3} componentClass={ControlLabel}>Desciption</Col>
+              <Col sm={9}>
+                <FormControl
+                  componentClass={TextInput}
+                  key={id}
+                  tag="textarea"
+                  name="description"
+                  value={description}
+                  onChange={this.onChange}
+                  rows={4}
+                  cols={50}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup>
+              <Col smOffset={3} sm={6}>
+                <ButtonToolbar>
+                  {/* TODO: Fix link, when there are selected filters in URL. 
+                  Can't just get "search" from "location". Need to take a look at "history" obj. */}
+                  <LinkContainer to="/issues">
+                    <Button bsStyle="link">Back</Button>
+                  </LinkContainer>
+                  <Button bsStyle="primary" type="submit">Submit</Button>
+                </ButtonToolbar>
+              </Col>
+            </FormGroup>
+          </Form>
+          <Col smOffset={3} sm={6}>
+            {validationMessage}
+          </Col>
+        </Panel.Body>
+        <Panel.Footer>
           <Link to={`/edit/${id - 1}`}>Prev</Link>
           {' | '}
           <Link to={`/edit/${id + 1}`}>Next</Link>
-        </div>
-      </div>
+        </Panel.Footer>
+      </Panel>
     );
   }
 }
