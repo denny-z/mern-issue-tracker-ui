@@ -3,7 +3,6 @@ import React from 'react';
 import { Route } from 'react-router-dom';
 import { Panel } from 'react-bootstrap';
 import graphQLFetch from './graphQLFetch.js';
-import IssueAdd from './IssueAdd.jsx';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
@@ -12,7 +11,6 @@ import Toast from './Toast.jsx';
 export default class IssueList extends React.Component {
   constructor() {
     super();
-    this.createIssue = this.createIssue.bind(this);
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
 
@@ -76,19 +74,6 @@ export default class IssueList extends React.Component {
 
     const data = await graphQLFetch(query, vars, this.showError);
     if (data) this.setState({ issues: data.issuesList });
-  }
-
-  async createIssue(issue) {
-    const query = `
-      mutation addIssue($issue: IssueInputs!) {
-        addIssue(issue: $issue) {
-          id
-        }
-      }
-    `;
-
-    const data = await graphQLFetch(query, { issue }, this.showError);
-    if (data) this.loadData();
   }
 
   async closeIssue(id) {
@@ -182,7 +167,6 @@ export default class IssueList extends React.Component {
           </Panel.Body>
         </Panel>
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
-        <IssueAdd createIssue={this.createIssue} />
         <Route path={`${match.path}/:id`} component={IssueDetail} />
 
         <Toast
