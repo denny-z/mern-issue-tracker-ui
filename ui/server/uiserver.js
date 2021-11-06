@@ -2,6 +2,7 @@
 const express = require('express');
 require('dotenv').config();
 const path = require('path');
+const render = require('./render.js');
 
 const app = express();
 
@@ -17,7 +18,7 @@ if (enableHMR && process.env.NODE_ENV !== 'production') {
   const devMiddleware = require('webpack-dev-middleware');
   const hotMiddleware = require('webpack-hot-middleware');
 
-  const config = require('../webpack.config');
+  const config = require('../webpack.config.js');
 
   config.entry.app.push('webpack-hot-middleware/client');
   config.plugins = config.plugins || [];
@@ -29,6 +30,8 @@ if (enableHMR && process.env.NODE_ENV !== 'production') {
 }
 
 app.use(express.static('public'));
+
+app.get('/about', render);
 
 app.get('/env.js', (req, res) => {
   res.send(`window.ENV = ${JSON.stringify(env)}`);
