@@ -1,5 +1,4 @@
 import 'babel-polyfill';
-import 'whatwg-fetch';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
@@ -12,7 +11,7 @@ const element = (
   </Router>
 );
 
-ReactDOM.render(element, document.getElementById('content'));
+ReactDOM.hydrate(element, document.getElementById('content'));
 
 if (module.hot) {
   module.hot.accept();
