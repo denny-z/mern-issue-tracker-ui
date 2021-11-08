@@ -1,8 +1,10 @@
-/* eslint-disable global-require */
-const express = require('express');
-require('dotenv').config();
-const path = require('path');
-const render = require('./render.js');
+import dotenv from 'dotenv';
+import express from 'express';
+import path from 'path';
+
+import render from './render.jsx';
+
+dotenv.config();
 
 const app = express();
 
@@ -18,7 +20,7 @@ if (enableHMR && process.env.NODE_ENV !== 'production') {
   const devMiddleware = require('webpack-dev-middleware');
   const hotMiddleware = require('webpack-hot-middleware');
 
-  const config = require('../webpack.config.js');
+  const config = require('../webpack.config.js')[0];
 
   config.entry.app.push('webpack-hot-middleware/client');
   config.plugins = config.plugins || [];
