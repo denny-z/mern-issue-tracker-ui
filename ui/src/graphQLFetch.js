@@ -1,4 +1,4 @@
-/* eslint-disable no-alert */
+import fetch from 'isomorphic-fetch';
 
 const dateRegexp = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
 
@@ -7,9 +7,12 @@ function jsonDateReciever(key, value) {
   return value;
 }
 
+// eslint-disable-next-line no-undef
+const apiEnpoint = __isBrowser__ ? window.ENV.UI_API_ENDPOINT : process.env.UI_SERVER_API_ENDPOINT;
+
 export default async function graphQLFetch(query, variables = {}, showError = null) {
   try {
-    const response = await fetch(window.ENV.UI_API_ENDPOINT, {
+    const response = await fetch(apiEnpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, variables }),

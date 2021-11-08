@@ -8,8 +8,9 @@ dotenv.config();
 
 const app = express();
 
-const UI_API_ENDPOINT = process.env.UI_API_ENDPOINT || 'http://localhost:3000/graphql';
-const env = { UI_API_ENDPOINT };
+process.env.UI_API_ENDPOINT = process.env.UI_API_ENDPOINT || 'http://localhost:3000/graphql';
+// eslint-disable-next-line max-len
+process.env.UI_SERVER_API_ENDPOINT = (process.env.UI_SERVER_API_ENDPOINT || process.env.UI_API_ENDPOINT);
 
 const enableHMR = (process.env.ENABLE_HMR || 'true') === 'true';
 if (enableHMR && process.env.NODE_ENV !== 'production') {
@@ -39,6 +40,7 @@ app.get('/about', (req, res, next) => {
 
 
 app.get('/env.js', (req, res) => {
+  const env = { UI_API_ENDPOINT: process.env.UI_API_ENDPOINT };
   res.send(`window.ENV = ${JSON.stringify(env)}`);
 });
 
