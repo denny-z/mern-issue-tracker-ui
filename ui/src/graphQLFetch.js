@@ -7,10 +7,11 @@ function jsonDateReciever(key, value) {
   return value;
 }
 
-// eslint-disable-next-line no-undef
-const apiEnpoint = __isBrowser__ ? window.ENV.UI_API_ENDPOINT : process.env.UI_SERVER_API_ENDPOINT;
-
 export default async function graphQLFetch(query, variables = {}, showError = null) {
+  // eslint-disable-next-line no-undef
+  const apiEnpoint = __isBrowser__ ? window.ENV.UI_API_ENDPOINT
+    : process.env.UI_SERVER_API_ENDPOINT;
+
   try {
     const response = await fetch(apiEnpoint, {
       method: 'POST',
