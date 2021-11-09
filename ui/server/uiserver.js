@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import path from 'path';
 
 import render from './render.jsx';
 
@@ -34,18 +33,14 @@ if (enableHMR && process.env.NODE_ENV !== 'production') {
 
 app.use(express.static('public'));
 
-app.get('/about', (req, res, next) => {
-  render(req, res, next);
-});
-
 
 app.get('/env.js', (req, res) => {
   const env = { UI_API_ENDPOINT: process.env.UI_API_ENDPOINT };
   res.send(`window.ENV = ${JSON.stringify(env)}`);
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve('public/index.html'));
+app.get('*', (req, res, next) => {
+  render(req, res, next);
 });
 
 const port = process.env.UI_SERVER_PORT || 8000;
