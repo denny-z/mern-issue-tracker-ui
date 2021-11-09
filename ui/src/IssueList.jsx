@@ -94,8 +94,16 @@ export default class IssueList extends React.Component {
     } = prevProps;
     const { location: { search }, match: { params: { id } } } = this.props;
 
-    if (prevSearch !== search || prevId !== id) {
+    const isSearchChanged = prevSearch !== search;
+    const isIdChanged = prevId !== id;
+
+    if (isSearchChanged && isIdChanged) {
       this.loadData();
+      return;
+    }
+
+    if (isIdChanged) {
+      this.loadSelectedIssue();
     }
   }
 
@@ -103,6 +111,23 @@ export default class IssueList extends React.Component {
     const { match, location: { search } } = this.props;
     const data = await IssueList.fetchData(match, search, this.showError);
     if (data) this.setState({ issues: data.issuesList, selectedIssue: data.issue });
+  }
+
+  // This function should be used when only selected issue. It will help to reduce
+  // network trafic if use loadData, because it fetches issuesList too.
+  async loadSelectedIssue() {
+    const query = `
+      query SelectedIssue($id: Int!) {
+        issue(id: $id) {
+          id description
+        }
+      }
+    `;
+    const { match: { params: { id } } } = this.props;
+    const vars = { id };
+
+    const data = await graphQLFetch(query, vars, this.showError);
+    if (data) this.setState({ selectedIssue: data.issue });
   }
 
   async closeIssue(id) {
