@@ -10,8 +10,30 @@ import NumInput from './NumInput.jsx';
 import DateInput from './DateInput.jsx';
 import TextInput from './TextInput.jsx';
 import Toast from './Toast.jsx';
+import store from './store.js';
 
 export default class IssueEdit extends React.Component {
+  static async fetchData(match, showError) {
+    const { params: { id } } = match;
+    const query = `
+      query IssueForEdit($id: Int!) {
+        issue(id: $id) {
+          id
+          title
+          description
+          status
+          owner
+          created
+          due
+          effort
+        }
+      }
+    `;
+
+    const data = await graphQLFetch(query, { id }, showError);
+    return data;
+  }
+
   constructor() {
     super();
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -25,8 +47,10 @@ export default class IssueEdit extends React.Component {
     this.showError = this.showError.bind(this);
     this.dismissToast = this.dismissToast.bind(this);
 
+    const issue = store.initialData ? store.initialData.issue : null;
+    delete store.initialData;
     this.state = {
-      issue: {},
+      issue,
       invalidFields: {},
       needShowValidation: false,
       toastVisible: false,
@@ -36,7 +60,8 @@ export default class IssueEdit extends React.Component {
   }
 
   componentDidMount() {
-    this.loadData();
+    const { issue } = this.state;
+    if (issue == null) this.loadData();
   }
 
   componentDidUpdate(prevProps) {
@@ -66,24 +91,8 @@ export default class IssueEdit extends React.Component {
   }
 
   async loadData() {
-    const { match: { params: { id } } } = this.props;
-    const query = `
-      query IssueForEdit($id: Int!) {
-        issue(id: $id) {
-          id
-          title
-          description
-          status
-          owner
-          created
-          due
-          effort
-        }
-      }
-    `;
-
-    const data = await graphQLFetch(query, { id }, this.showError);
-
+    const { match } = this.props;
+    const data = await IssueEdit.fetchData(match, this.showError);
     this.setState({ issue: data ? data.issue : {}, invalidFields: {} });
   }
 
@@ -144,6 +153,9 @@ export default class IssueEdit extends React.Component {
   }
 
   render() {
+    const { issue } = this.state;
+    if (issue == null) return null;
+
     const { issue: { id } } = this.state;
     const { match: { params: { id: propsId } } } = this.props;
 
