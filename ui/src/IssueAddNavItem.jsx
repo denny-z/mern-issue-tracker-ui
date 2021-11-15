@@ -10,24 +10,17 @@ import {
 } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import graphQLFetch from './graphQLFetch.js';
-import Toast from './Toast.jsx';
+import withToast from './withToast.jsx';
 
 class IssueAddNavItem extends Component {
   constructor(props) {
     super(props);
 
     this.showModal = this.showModal.bind(this);
-    this.hideModal = this.hideModal.bind(this);
-    this.showError = this.showError.bind(this);
-    this.dismissToast = this.dismissToast.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
 
     this.state = {
       needShowModal: false,
-
-      toastVisible: false,
-      toastStyle: 'info',
-      toastMessage: ' ',
     };
   }
 
@@ -37,14 +30,6 @@ class IssueAddNavItem extends Component {
 
   hideModal() {
     this.setState({ needShowModal: false });
-  }
-
-  showError(message) {
-    this.setState({ toastVisible: true, toastStyle: 'danger', toastMessage: message });
-  }
-
-  dismissToast() {
-    this.setState({ toastVisible: false });
   }
 
   async handleSubmit(e) {
@@ -61,7 +46,8 @@ class IssueAddNavItem extends Component {
         id
       }  
     }`;
-    const data = await graphQLFetch(query, { issue }, this.showError);
+    const { showError } = this.props;
+    const data = await graphQLFetch(query, { issue }, showError);
     if (data) {
       const { history } = this.props;
       history.push(`/edit/${data.addIssue.id}`);
@@ -70,7 +56,6 @@ class IssueAddNavItem extends Component {
 
   render() {
     const { needShowModal } = this.state;
-    const { toastVisible, toastStyle, toastMessage } = this.state;
 
     return (
       <React.Fragment>
@@ -113,16 +98,9 @@ class IssueAddNavItem extends Component {
             </ButtonToolbar>
           </Modal.Footer>
         </Modal>
-        <Toast
-          needToShow={toastVisible}
-          bsStyle={toastStyle}
-          onHide={this.dismissToast}
-        >
-          {toastMessage}
-        </Toast>
       </React.Fragment>
     );
   }
 }
 
-export default withRouter(IssueAddNavItem);
+export default withToast(withRouter(IssueAddNavItem));
