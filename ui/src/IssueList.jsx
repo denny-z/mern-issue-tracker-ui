@@ -90,14 +90,14 @@ class IssueList extends React.Component {
     const isSearchChanged = prevSearch !== search;
     const isIdChanged = prevId !== id;
 
-    if (isSearchChanged && isIdChanged) {
-      this.loadData();
+    if (!isIdChanged && !isSearchChanged) return;
+
+    if (isIdChanged && !isSearchChanged) {
+      this.loadSelectedIssue();
       return;
     }
 
-    if (isIdChanged) {
-      this.loadSelectedIssue();
-    }
+    this.loadData();
   }
 
   async loadData() {
