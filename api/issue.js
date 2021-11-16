@@ -12,11 +12,7 @@ function getDeletedCollection() {
   return getDb().collection(deletedCollectionName);
 }
 
-async function get(_, { id }) {
-  return getCollection().findOne({ id });
-}
-
-async function list(_, { status, effortMin, effortMax }) {
+function processFilter({ status, effortMin, effortMax }) {
   const filter = {};
 
   if (status) filter.status = status;
@@ -26,6 +22,16 @@ async function list(_, { status, effortMin, effortMax }) {
     if (effortMin !== undefined) filter.effort.$gte = effortMin;
     if (effortMax !== undefined) filter.effort.$lte = effortMax;
   }
+
+  return filter;
+}
+
+async function get(_, { id }) {
+  return getCollection().findOne({ id });
+}
+
+async function list(_, filterArgs) {
+  const filter = processFilter(filterArgs);
 
   return getCollection().find(filter).toArray();
 }
@@ -88,10 +94,33 @@ async function remove(_, { id }) {
   return false;
 }
 
+async function count(_, filterArgs) {
+  const filter = processFilter(filterArgs);
+  const results = await getCollection().aggregate([
+    { $match: filter },
+    {
+      $group:
+      {
+        _id: { status: '$status', owner: '$owner' },
+        count: { $sum: 1 },
+      },
+    },
+  ]).toArray();
+  const stats = {};
+  results.forEach((result) => {
+    // eslint-disable-next-line no-underscore-dangle
+    const { owner, status: statusKey } = result._id;
+    if (!stats[owner]) stats[owner] = { owner };
+    stats[owner][statusKey] = result.count;
+  });
+  return Object.values(stats);
+}
+
 module.exports = {
   add,
   list,
   get,
   update,
   delete: remove,
+  count,
 };
