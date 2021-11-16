@@ -64,14 +64,35 @@ class IssueReport extends Component {
     const { stats } = this.state;
     if (stats == null) return null;
 
-    const result = stats.map(counts => (
-      <tr key={counts.owner}>
-        <td>{counts.owner}</td>
+    const result = stats.map((counts) => {
+      const { owner, ...statusToCount } = counts;
+      const sumOfCounts = Object
+        .values(statusToCount)
+        .reduce((previousValue, currentValue) => (previousValue + currentValue), 0);
+
+      return (
+        <tr key={counts.owner}>
+          <td>{counts.owner}</td>
+          {STATUSES.map(status => (
+            <td key={status}>{counts[status]}</td>
+          ))}
+          <td>{sumOfCounts}</td>
+        </tr>
+      );
+    });
+
+    const sumRow = (
+      <tr key="__sumOfColumn">
+        <td><b><small>Total by status</small></b></td>
         {STATUSES.map(status => (
-          <td key={status}>{counts[status]}</td>
+          <td key={`__sumOfColumn_${status}`}>
+            {stats.reduce((previousValue, counts) => (previousValue + counts[status]), 0)}
+          </td>
         ))}
+        <td>{' '}</td>
       </tr>
-    ));
+    );
+    result.push(sumRow);
 
     return result;
   }
@@ -80,6 +101,7 @@ class IssueReport extends Component {
     const headerColumns = STATUSES.map(status => (
       <th key={status}>{status}</th>
     ));
+    headerColumns.push(<th key="__sumOfRow"><small>Total by owner</small></th>);
     const statRows = this.renderStatRows();
 
     return (
