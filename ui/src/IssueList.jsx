@@ -7,18 +7,13 @@ import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import store from './store.js';
+import prepareIssueFilterVars from './prepareIssueFilterVars.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
     const params = new URLSearchParams(search);
     const vars = { hasSelection: false, selectedId: 0 };
-
-    if (params.get('status')) vars.status = params.get('status');
-
-    const effortMin = parseInt(params.get('effortMin'), 10);
-    if (!Number.isNaN(effortMin)) vars.effortMin = effortMin;
-    const effortMax = parseInt(params.get('effortMax'), 10);
-    if (!Number.isNaN(effortMax)) vars.effortMax = effortMax;
+    Object.assign(vars, prepareIssueFilterVars(params));
 
     const { params: { id } } = match;
     const idInt = parseInt(id, 10);
@@ -196,7 +191,7 @@ class IssueList extends React.Component {
             <Panel.Title toggle>Filter</Panel.Title>
           </Panel.Heading>
           <Panel.Body collapsible>
-            <IssueFilter />
+            <IssueFilter urlBase="/issues" />
           </Panel.Body>
         </Panel>
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
