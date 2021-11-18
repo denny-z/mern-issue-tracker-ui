@@ -30,10 +30,20 @@ async function get(_, { id }) {
   return getCollection().findOne({ id });
 }
 
-async function list(_, filterArgs) {
+const PAGE_SIZE = 10;
+
+async function list(_, { page, ...filterArgs }) {
   const filter = processFilter(filterArgs);
 
-  return getCollection().find(filter).toArray();
+  const cursor = getCollection().find(filter)
+    .sort({ id: 1 })
+    .skip(PAGE_SIZE * (page - 1))
+    .limit(PAGE_SIZE);
+
+  const totalCount = await cursor.count(false);
+  const issues = cursor.toArray();
+  const pages = Math.ceil(totalCount / PAGE_SIZE);
+  return { issues, pages };
 }
 
 function validate(issue) {

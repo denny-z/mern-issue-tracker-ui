@@ -35,13 +35,15 @@ class IssueList extends React.Component {
           effortMin: $effortMin,
           effortMax: $effortMax
         ) {
-          id
-          title
-          owner
-          status
-          created
-          effort
-          due
+          issues { 
+            id
+            title
+            owner
+            status
+            created
+            effort
+            due
+          }
         }
         
         issue(id: $selectedId) @include (if: $hasSelection) {
@@ -60,7 +62,7 @@ class IssueList extends React.Component {
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
 
-    const issues = store.initialData ? store.initialData.issuesList : null;
+    const issues = store.initialData ? store.initialData.issuesList.issues : null;
     const selectedIssue = store.initialData ? store.initialData.issue : null;
     delete store.initialData;
 
@@ -98,7 +100,7 @@ class IssueList extends React.Component {
   async loadData() {
     const { match, location: { search }, showError } = this.props;
     const data = await IssueList.fetchData(match, search, showError);
-    if (data) this.setState({ issues: data.issuesList, selectedIssue: data.issue });
+    if (data) this.setState({ issues: data.issuesList.issues, selectedIssue: data.issue });
   }
 
   // This function should be used when only selected issue. It will help to reduce

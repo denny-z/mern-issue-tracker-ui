@@ -26,6 +26,11 @@ type IssueCounts {
   Closed: Int
 }
 
+type IssueListWithPages {
+  issues: [Issue!]!
+  pages: Int!
+}
+
 input IssueInputs {
   title: String!
   description: String
@@ -56,7 +61,8 @@ type Query {
     status: StatusType
     effortMin: Int
     effortMax: Int
-  ): [Issue!]
+    page: Int = 1
+  ): IssueListWithPages
   issue(id: Int!): Issue!
   issueCounts(
     status: StatusType
