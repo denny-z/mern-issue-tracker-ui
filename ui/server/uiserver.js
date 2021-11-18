@@ -1,9 +1,11 @@
 import dotenv from 'dotenv';
 import express from 'express';
-
+import SourceMapSupport from 'source-map-support';
 import render from './render.jsx';
 
+
 dotenv.config();
+SourceMapSupport.install();
 
 const app = express();
 
