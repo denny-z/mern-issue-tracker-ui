@@ -37,7 +37,6 @@ async function list(_, { page, ...filterArgs }) {
 
   let currentPage = parseInt(page, 10);
   if (Number.isNaN(currentPage) || page < 0) currentPage = 1;
-  console.log(currentPage);
 
   const cursor = getCollection().find(filter)
     .sort({ id: 1 })

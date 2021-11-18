@@ -8,6 +8,7 @@ import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import store from './store.js';
 import prepareIssueFilterVars from './prepareIssueFilterVars.js';
+import PagintationWithSections from './PaginationWithSections.jsx';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
@@ -21,6 +22,9 @@ class IssueList extends React.Component {
       vars.hasSelection = true;
       vars.selectedId = idInt;
     }
+    let page = params.get('page', 10);
+    if (Number.isNaN(page)) page = 1;
+    vars.page = page;
 
     const query = `
       query IssueList(
@@ -29,11 +33,13 @@ class IssueList extends React.Component {
         $effortMax: Int,
         $hasSelection: Boolean!,
         $selectedId: Int!,
+        $page: Int
       ){
         issuesList(
-          status: $status,
-          effortMin: $effortMin,
+          status: $status
+          effortMin: $effortMin
           effortMax: $effortMax
+          page: $page
         ) {
           issues { 
             id
@@ -44,6 +50,7 @@ class IssueList extends React.Component {
             effort
             due
           }
+          pages
         }
         
         issue(id: $selectedId) @include (if: $hasSelection) {
@@ -62,13 +69,16 @@ class IssueList extends React.Component {
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
 
-    const issues = store.initialData ? store.initialData.issuesList.issues : null;
-    const selectedIssue = store.initialData ? store.initialData.issue : null;
+    const initialData = store.initialData || { issuesList: {} };
+    const {
+      issuesList: { issues, pages: totalPages }, issue: selectedIssue,
+    } = initialData;
     delete store.initialData;
 
     this.state = {
       issues,
       selectedIssue,
+      totalPages,
     };
   }
 
@@ -100,7 +110,13 @@ class IssueList extends React.Component {
   async loadData() {
     const { match, location: { search }, showError } = this.props;
     const data = await IssueList.fetchData(match, search, showError);
-    if (data) this.setState({ issues: data.issuesList.issues, selectedIssue: data.issue });
+    if (data) {
+      this.setState({
+        issues: data.issuesList.issues,
+        totalPages: data.issuesList.pages,
+        selectedIssue: data.issue,
+      });
+    }
   }
 
   // This function should be used when only selected issue. It will help to reduce
@@ -181,10 +197,10 @@ class IssueList extends React.Component {
     const { issues } = this.state;
     if (issues == null) return null;
 
-    const { location } = this.props;
-    const hasFilter = location.search !== '';
+    const { location: { search } } = this.props;
+    const hasFilter = search !== '';
 
-    const { selectedIssue } = this.state;
+    const { selectedIssue, totalPages } = this.state;
 
     return (
       <React.Fragment>
@@ -198,6 +214,7 @@ class IssueList extends React.Component {
         </Panel>
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
         <IssueDetail issue={selectedIssue} />
+        <PagintationWithSections search={search} totalPages={totalPages} />
       </React.Fragment>
     );
   }
