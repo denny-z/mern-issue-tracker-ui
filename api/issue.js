@@ -35,9 +35,13 @@ const PAGE_SIZE = 10;
 async function list(_, { page, ...filterArgs }) {
   const filter = processFilter(filterArgs);
 
+  let currentPage = parseInt(page, 10);
+  if (Number.isNaN(currentPage) || page < 0) currentPage = 1;
+  console.log(currentPage);
+
   const cursor = getCollection().find(filter)
     .sort({ id: 1 })
-    .skip(PAGE_SIZE * (page - 1))
+    .skip(PAGE_SIZE * (currentPage - 1))
     .limit(PAGE_SIZE);
 
   const totalCount = await cursor.count(false);
