@@ -58,6 +58,7 @@ input IssueUpdateInputs {
 type Query {
   about: String!
   issuesList(
+    search: String,
     status: StatusType
     effortMin: Int
     effortMax: Int

@@ -12,7 +12,9 @@ function getDeletedCollection() {
   return getDb().collection(deletedCollectionName);
 }
 
-function processFilter({ status, effortMin, effortMax }) {
+function processFilter({
+  status, effortMin, effortMax, search,
+}) {
   const filter = {};
 
   if (status) filter.status = status;
@@ -22,6 +24,7 @@ function processFilter({ status, effortMin, effortMax }) {
     if (effortMin !== undefined) filter.effort.$gte = effortMin;
     if (effortMax !== undefined) filter.effort.$lte = effortMax;
   }
+  if (search) filter.$text = { $search: search };
 
   return filter;
 }

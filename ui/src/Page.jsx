@@ -1,10 +1,11 @@
 import React from 'react';
 import {
-  Navbar, Nav, NavItem, Glyphicon, NavDropdown, MenuItem, Grid,
+  Navbar, Nav, NavItem, Glyphicon, NavDropdown, MenuItem, Grid, Col,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import Contents from './Contents.jsx';
 import IssueAddNavItem from './IssueAddNavItem.jsx';
+import Search from './Search.jsx';
 
 function NavBar() {
   return (
@@ -24,6 +25,11 @@ function NavBar() {
           <NavItem>Report</NavItem>
         </LinkContainer>
       </Nav>
+      <Col xs={5}>
+        <Navbar.Form>
+          <Search />
+        </Navbar.Form>
+      </Col>
       <Nav pullRight>
         <IssueAddNavItem />
         <NavDropdown
