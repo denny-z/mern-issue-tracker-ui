@@ -75,4 +75,5 @@ type Mutation {
   addIssue(issue: IssueInputs!): Issue!
   updateIssue(id: Int!, changes: IssueUpdateInputs!): Issue!
   deleteIssue(id: Int!): Boolean!
+  issueRestore(id: Int!): Boolean!
 }

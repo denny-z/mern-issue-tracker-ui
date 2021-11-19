@@ -107,6 +107,23 @@ async function remove(_, { id }) {
   return false;
 }
 
+async function restore(_, { id }) {
+  const issues = getCollection();
+  const deletedIssues = getDeletedCollection();
+
+  const issue = await deletedIssues.findOne({ id });
+  if (!issue) return false;
+  // IMP-DIFF: "restored" field used to indicate field is restoredez instead of "deleted".
+  issue.restored = new Date();
+
+  const insertResult = await issues.insertOne(issue);
+  if (insertResult.insertedId) {
+    const deleteResult = await deletedIssues.removeOne({ id });
+    return deleteResult.deletedCount === 1;
+  }
+  return false;
+}
+
 async function count(_, filterArgs) {
   const filter = processFilter(filterArgs);
   const results = await getCollection().aggregate([
@@ -135,5 +152,6 @@ module.exports = {
   get,
   update,
   delete: remove,
+  restore,
   count,
 };
