@@ -1,6 +1,6 @@
 import URLSearchParams from 'url-search-params';
 import React from 'react';
-import { Panel } from 'react-bootstrap';
+import { Button, Panel } from 'react-bootstrap';
 import graphQLFetch from './graphQLFetch.js';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
@@ -68,6 +68,7 @@ class IssueList extends React.Component {
     super();
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
+    this.restoreIssue = this.restoreIssue.bind(this);
 
     const initialData = store.initialData || { issuesList: {} };
     const {
@@ -179,7 +180,14 @@ class IssueList extends React.Component {
       }
     `;
     const data = await graphQLFetch(query, { id }, showError);
-    showSuccess(`Deleted issue ${id} successfully.`);
+    const undoMessage = (
+      <span>
+        {`Deleted issue ${id} successfully.`}
+        <Button bsStyle="link" onClick={() => this.restoreIssue(id)}>
+          UNDO
+        </Button>
+      </span>
+    );
 
     if (data && data.deleteIssue) {
       this.setState(prevState => ({ issues: prevState.issues.filter(issue => issue.id !== id) }));
@@ -188,7 +196,21 @@ class IssueList extends React.Component {
       if (pathname === `/issues/${id}`) {
         history.push({ pathname: '/issues', search });
       }
+
+      showSuccess(undoMessage);
     } else {
+      this.loadData();
+    }
+  }
+
+  async restoreIssue(id) {
+    const query = `mutation RestoreIssue($id: Int!) {
+      issueRestore(id: $id)
+    }`;
+    const { showError, showSuccess } = this.props;
+    const data = await graphQLFetch(query, { id }, showError);
+    if (data && data.issueRestore) {
+      showSuccess(`Issue ${id} restored successfully.`);
       this.loadData();
     }
   }
