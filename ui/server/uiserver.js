@@ -3,11 +3,17 @@ import express from 'express';
 import SourceMapSupport from 'source-map-support';
 import render from './render.jsx';
 
+const proxy = require('http-proxy-middleware');
 
 dotenv.config();
 SourceMapSupport.install();
 
 const app = express();
+
+const apiProxyTarget = process.env.API_PROXY_TARGET;
+if (apiProxyTarget) {
+  app.use('/graphql', proxy({ target: apiProxyTarget }));
+}
 
 process.env.UI_API_ENDPOINT = process.env.UI_API_ENDPOINT || 'http://localhost:3000/graphql';
 // eslint-disable-next-line max-len
