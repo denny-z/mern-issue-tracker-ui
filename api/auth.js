@@ -63,4 +63,9 @@ routes.post('/user', (req, res) => {
   res.send(getUser(req));
 });
 
+routes.post('/signout', (req, res) => {
+  res.clearCookie('jwt');
+  res.json({ status: 'ok' });
+});
+
 module.exports = { routes };
