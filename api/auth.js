@@ -2,6 +2,7 @@ const { AuthenticationError } = require('apollo-server-express');
 const Router = require('express');
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
 
 let { JWT_SECRET } = process.env;
 if (!JWT_SECRET) {
@@ -14,6 +15,9 @@ if (!JWT_SECRET) {
 }
 
 const routes = new Router();
+
+const origin = process.env.UI_SERVER_ORIGIN || 'http://localhost:8000';
+routes.use(cors({ origin, credentials: true }));
 
 routes.use(Router.json());
 

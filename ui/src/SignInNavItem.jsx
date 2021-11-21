@@ -50,6 +50,7 @@ class SignInNavItem extends Component {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ google_token: googleToken }),
+        credentials: 'include',
       });
 
       const body = await response.text();
@@ -68,6 +69,7 @@ class SignInNavItem extends Component {
     try {
       await fetch(`${apiEndpoint}/signout`, {
         method: 'POST',
+        credentials: 'include',
       });
       const auth2 = window.gapi.auth2.getAuthInstance();
       await auth2.signOut();
