@@ -1,3 +1,4 @@
+const { AuthenticationError } = require('apollo-server-express');
 const Router = require('express');
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
@@ -26,6 +27,16 @@ function getUser(req) {
   } catch (error) {
     return { signedIn: false };
   }
+}
+
+function mustBeSignedIn(resolver) {
+  return (root, args, { user }) => {
+    if (!user || !user.signedIn) {
+      throw new AuthenticationError('You must be signed in');
+    }
+
+    return resolver(root, args, { user });
+  };
 }
 
 routes.post('/signin', async (req, res) => {
@@ -68,4 +79,4 @@ routes.post('/signout', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-module.exports = { routes };
+module.exports = { routes, getUser, mustBeSignedIn };

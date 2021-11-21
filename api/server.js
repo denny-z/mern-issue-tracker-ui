@@ -6,9 +6,11 @@ const { installHandler } = require('./api_handler');
 const auth = require('./auth');
 
 const app = express();
-installHandler(app);
+
 app.use(cookieParser());
 app.use('/auth', auth.routes);
+
+installHandler(app);
 
 const port = process.env.API_SERVER_PORT || 3000;
 

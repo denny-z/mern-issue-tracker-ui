@@ -4,6 +4,7 @@ const fs = require('fs');
 const GraphQLDate = require('./graphql_date');
 const about = require('./about');
 const issue = require('./issue');
+const auth = require('./auth');
 
 const typeDefs = fs.readFileSync('./schema.graphql', 'utf-8');
 
@@ -24,9 +25,15 @@ const resolvers = {
   GraphQLDate,
 };
 
+function getContext({ req }) {
+  const user = auth.getUser(req);
+  return { user };
+}
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  context: getContext,
   formatError: (error) => {
     console.error(error);
     return error;

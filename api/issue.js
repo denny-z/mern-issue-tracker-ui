@@ -1,5 +1,6 @@
 const { UserInputError } = require('apollo-server-express');
 const { getNextSequence, getDb } = require('./db');
+const { mustBeSignedIn } = require('./auth');
 
 const collectionName = 'issues';
 const deletedCollectionName = 'deleted_issues';
@@ -150,11 +151,11 @@ async function count(_, filterArgs) {
 }
 
 module.exports = {
-  add,
+  add: mustBeSignedIn(add),
   list,
   get,
-  update,
-  delete: remove,
-  restore,
+  update: mustBeSignedIn(update),
+  delete: mustBeSignedIn(remove),
+  restore: mustBeSignedIn(restore),
   count,
 };
