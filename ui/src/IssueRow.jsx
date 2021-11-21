@@ -5,7 +5,7 @@ import {
 } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
-import UserConext from './UserContext.jsx';
+import UserContext from './UserContext.jsx';
 
 class IssueRowPlain extends React.Component {
   render() {
@@ -16,7 +16,7 @@ class IssueRowPlain extends React.Component {
       deleteIssue,
     } = this.props;
 
-    const user = this.context;
+    const { user } = this.context;
 
     const selectLocation = { pathname: `/issues/${issue.id}`, search };
     const showCloseTooltip = (
@@ -88,7 +88,7 @@ class IssueRowPlain extends React.Component {
   }
 }
 
-IssueRowPlain.contextType = UserConext;
+IssueRowPlain.contextType = UserContext;
 const IssueRow = withRouter(IssueRowPlain);
 delete IssueRow.contextType;
 export default IssueRow;

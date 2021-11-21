@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import {
   NavDropdown, MenuItem, Modal, NavItem, Button,
 } from 'react-bootstrap';
+import UserContext from './UserContext.jsx';
 import withToast from './withToast.jsx';
 
 class SignInNavItem extends Component {
@@ -33,7 +34,7 @@ class SignInNavItem extends Component {
 
   async signIn() {
     this.hideModal();
-    const { showError, onUserChange } = this.props;
+    const { showError } = this.props;
     let googleToken;
     try {
       const auth2 = window.gapi.auth2.getAuthInstance();
@@ -54,6 +55,7 @@ class SignInNavItem extends Component {
       const body = await response.text();
       const result = JSON.parse(body);
       const { signedIn: isSignedIn, givenName } = result;
+      const { onUserChange } = this.context;
       onUserChange({ isSignedIn, givenName });
     } catch (error) {
       showError(`Error sign in to app ${error}`);
@@ -62,13 +64,14 @@ class SignInNavItem extends Component {
 
   async signOut() {
     const apiEndpoint = window.ENV.UI_AUTH_ENDPOINT;
-    const { showError, onUserChange } = this.props;
+    const { showError } = this.props;
     try {
       await fetch(`${apiEndpoint}/signout`, {
         method: 'POST',
       });
       const auth2 = window.gapi.auth2.getAuthInstance();
       await auth2.signOut();
+      const { onUserChange } = this.context;
       onUserChange({ isSignedIn: false, givenName: '' });
     } catch (error) {
       showError(`Error signing out: ${error}`);
@@ -91,7 +94,7 @@ class SignInNavItem extends Component {
   }
 
   render() {
-    const { user } = this.props;
+    const { user } = this.context;
 
     if (user.isSignedIn) {
       return (
@@ -128,4 +131,5 @@ class SignInNavItem extends Component {
   }
 }
 
+SignInNavItem.contextType = UserContext;
 export default withToast(SignInNavItem);

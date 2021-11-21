@@ -9,7 +9,7 @@ import Search from './Search.jsx';
 import SignInNavItem from './SignInNavItem.jsx';
 import UserContext from './UserContext.jsx';
 
-function NavBar({ user, onUserChange }) {
+function NavBar({ onUserChange }) {
   return (
     // IMP-DIFF: Added fluid attribute to make it look pretier on wide screens.
     <Navbar fluid>
@@ -33,8 +33,8 @@ function NavBar({ user, onUserChange }) {
         </Navbar.Form>
       </Col>
       <Nav pullRight>
-        <IssueAddNavItem user={user} />
-        <SignInNavItem user={user} onUserChange={onUserChange} />
+        <IssueAddNavItem />
+        <SignInNavItem onUserChange={onUserChange} />
         <NavDropdown
           id="user-dropdown"
           title={<Glyphicon glyph="option-vertical" />}
@@ -87,13 +87,13 @@ export default class Page extends React.Component {
     const { user } = this.state;
     return (
       <div>
-        <NavBar user={user} onUserChange={this.onUserChange} />
-        <Grid fluid>
-          <UserContext.Provider value={user}>
+        <UserContext.Provider value={{ user, onUserChange: this.onUserChange }}>
+          <NavBar />
+          <Grid fluid>
             <Contents />
-          </UserContext.Provider>
-        </Grid>
-        <Footer />
+          </Grid>
+          <Footer />
+        </UserContext.Provider>
       </div>
     );
   }

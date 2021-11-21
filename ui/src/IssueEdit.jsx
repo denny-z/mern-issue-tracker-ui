@@ -11,7 +11,7 @@ import DateInput from './DateInput.jsx';
 import TextInput from './TextInput.jsx';
 import store from './store.js';
 import withToast from './withToast.jsx';
-import UserConext from './UserContext.jsx';
+import UserContext from './UserContext.jsx';
 
 class IssueEdit extends React.Component {
   static async fetchData(match, search, showError) {
@@ -161,7 +161,7 @@ class IssueEdit extends React.Component {
       );
     }
 
-    const user = this.context;
+    const { user } = this.context;
 
     return (
       <Panel>
@@ -295,7 +295,7 @@ class IssueEdit extends React.Component {
   }
 }
 
-IssueEdit.contextType = UserConext;
+IssueEdit.contextType = UserContext;
 const IssueEditWithToast = withToast(IssueEdit);
 IssueEditWithToast.fetchData = IssueEdit.fetchData;
 export default IssueEditWithToast;

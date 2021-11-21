@@ -10,6 +10,7 @@ import {
 } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import graphQLFetch from './graphQLFetch.js';
+import UserContext from './UserContext.jsx';
 import withToast from './withToast.jsx';
 
 class IssueAddNavItem extends Component {
@@ -57,7 +58,7 @@ class IssueAddNavItem extends Component {
 
   render() {
     const { needShowModal } = this.state;
-    const { user: { isSignedIn } } = this.props;
+    const { user: { isSignedIn } } = this.context;
 
     return (
       <React.Fragment>
@@ -105,4 +106,7 @@ class IssueAddNavItem extends Component {
   }
 }
 
-export default withToast(withRouter(IssueAddNavItem));
+IssueAddNavItem.contextType = UserContext;
+const WithRouter = withRouter(IssueAddNavItem);
+delete WithRouter.contextType;
+export default withToast(WithRouter);

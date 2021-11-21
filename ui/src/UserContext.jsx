@@ -1,7 +1,7 @@
 import React from 'react';
 
-const UserConext = React.createContext({
-  isSignedIn: false,
+const UserContext = React.createContext({
+  user: { isSignedIn: false },
 });
 
-export default UserConext;
+export default UserContext;
