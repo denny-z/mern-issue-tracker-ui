@@ -12,16 +12,21 @@ async function render(req, res) {
   const activeRoute = routes.find(
     route => matchPath(req.path, route),
   );
+  const { cookie } = req.headers;
 
   let initialData;
   if (activeRoute && activeRoute.component.fetchData) {
     const match = matchPath(req.path, activeRoute);
     const index = req.url.indexOf('?');
     const search = index !== -1 ? req.url.substr(index) : null;
-    initialData = await activeRoute.component.fetchData(match, search);
+    initialData = await activeRoute.component
+      .fetchData(match, search, console.error, cookie);
   }
 
   store.initialData = initialData;
+
+  const userData = await Page.fetchData(null, null, null, cookie);
+  store.userData = userData;
 
   const context = {};
 
@@ -35,7 +40,7 @@ async function render(req, res) {
   if (context.url) {
     res.redirect(301, context.url);
   } else {
-    res.send(template(body, initialData));
+    res.send(template(body, initialData, userData));
   }
 }
 

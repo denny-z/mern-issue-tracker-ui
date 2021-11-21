@@ -55,9 +55,9 @@ class SignInNavItem extends Component {
 
       const body = await response.text();
       const result = JSON.parse(body);
-      const { signedIn: isSignedIn, givenName } = result;
+      const { signedIn, givenName } = result;
       const { onUserChange } = this.context;
-      onUserChange({ isSignedIn, givenName });
+      onUserChange({ signedIn, givenName });
     } catch (error) {
       showError(`Error sign in to app ${error}`);
     }
@@ -74,7 +74,7 @@ class SignInNavItem extends Component {
       const auth2 = window.gapi.auth2.getAuthInstance();
       await auth2.signOut();
       const { onUserChange } = this.context;
-      onUserChange({ isSignedIn: false, givenName: '' });
+      onUserChange({ signedIn: false, givenName: '' });
     } catch (error) {
       showError(`Error signing out: ${error}`);
     }
@@ -98,7 +98,7 @@ class SignInNavItem extends Component {
   render() {
     const { user } = this.context;
 
-    if (user.isSignedIn) {
+    if (user.signedIn) {
       return (
         <NavDropdown title={user.givenName} id="user">
           <MenuItem onClick={this.signOut}>Sign out</MenuItem>

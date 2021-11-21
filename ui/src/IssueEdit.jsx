@@ -271,7 +271,7 @@ class IssueEdit extends React.Component {
                   <Button
                     bsStyle="primary"
                     type="submit"
-                    disabled={!user.isSignedIn}
+                    disabled={!user.signedIn}
                   >
                     Submit
                   </Button>

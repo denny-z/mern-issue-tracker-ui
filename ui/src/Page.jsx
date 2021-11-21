@@ -4,9 +4,11 @@ import {
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import Contents from './Contents.jsx';
+import graphQLFetch from './graphQLFetch.js';
 import IssueAddNavItem from './IssueAddNavItem.jsx';
 import Search from './Search.jsx';
 import SignInNavItem from './SignInNavItem.jsx';
+import store from './store.js';
 import UserContext from './UserContext.jsx';
 
 function NavBar({ onUserChange }) {
@@ -61,23 +63,30 @@ function Footer() {
 }
 
 export default class Page extends React.Component {
+  static async fetchData(match, search, showError, cookie) {
+    const query = `query User {
+      user { signedIn givenName }
+    }`;
+
+    const data = await graphQLFetch(query, {}, showError, cookie);
+    return data;
+  }
+
   constructor(props) {
     super(props);
     this.onUserChange = this.onUserChange.bind(this);
 
-    this.state = { user: {} };
+    const user = store.userData ? store.userData.user : null;
+    delete store.userData;
+    this.state = { user };
   }
 
   async componentDidMount() {
-    const apiEndpoint = window.ENV.UI_AUTH_ENDPOINT;
-    const response = await fetch(`${apiEndpoint}/user`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    const body = await response.text();
-    const result = JSON.parse(body);
-    const { signedIn: isSignedIn, givenName } = result;
-    this.setState({ user: { isSignedIn, givenName } });
+    const { user } = this.state;
+    if (!user) {
+      const data = await Page.fetchData();
+      this.setState({ user: data.user });
+    }
   }
 
   onUserChange(user) {
@@ -86,6 +95,8 @@ export default class Page extends React.Component {
 
   render() {
     const { user } = this.state;
+    if (!user) return null;
+
     return (
       <div>
         <UserContext.Provider value={{ user, onUserChange: this.onUserChange }}>

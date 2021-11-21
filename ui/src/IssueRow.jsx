@@ -61,7 +61,7 @@ class IssueRowPlain extends React.Component {
               type="button"
               bsSize="xsmall"
               onClick={(e) => { onClose(e, issue.id); }}
-              disabled={issue.status === 'Closed' || !user.isSignedIn}
+              disabled={issue.status === 'Closed' || !user.signedIn}
             >
               <Glyphicon glyph="remove" />
             </Button>
@@ -71,7 +71,7 @@ class IssueRowPlain extends React.Component {
               type="button"
               bsSize="xsmall"
               onClick={(e) => { onDelete(e, issue.id); }}
-              disabled={!user.isSignedIn}
+              disabled={!user.signedIn}
             >
               <Glyphicon glyph="trash" />
             </Button>

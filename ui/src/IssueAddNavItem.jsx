@@ -58,11 +58,11 @@ class IssueAddNavItem extends Component {
 
   render() {
     const { needShowModal } = this.state;
-    const { user: { isSignedIn } } = this.context;
+    const { user: { signedIn } } = this.context;
 
     return (
       <React.Fragment>
-        <NavItem disabled={!isSignedIn} onClick={this.showModal}>
+        <NavItem disabled={!signedIn} onClick={this.showModal}>
           <OverlayTrigger
             placement="left"
             delayShow={1000}

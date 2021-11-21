@@ -7,15 +7,18 @@ function jsonDateReciever(key, value) {
   return value;
 }
 
-export default async function graphQLFetch(query, variables = {}, showError = null) {
+export default async function graphQLFetch(query, variables = {}, showError = null, cookie) {
   // eslint-disable-next-line no-undef
   const apiEnpoint = __isBrowser__ ? window.ENV.UI_API_ENDPOINT
     : process.env.UI_SERVER_API_ENDPOINT;
 
+  const headers = { 'Content-Type': 'application/json' };
+  if (cookie) headers.Cookie = cookie;
+
   try {
     const response = await fetch(apiEnpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ query, variables }),
       credentials: 'include',
     });

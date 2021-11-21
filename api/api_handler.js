@@ -11,6 +11,7 @@ const typeDefs = fs.readFileSync('./schema.graphql', 'utf-8');
 const resolvers = {
   Query: {
     about: about.getMessage,
+    user: auth.resolveUser,
     issuesList: issue.list,
     issue: issue.get,
     issueCounts: issue.count,

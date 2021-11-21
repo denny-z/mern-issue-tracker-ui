@@ -33,6 +33,10 @@ function getUser(req) {
   }
 }
 
+function resolveUser(_, args, { user }) {
+  return user;
+}
+
 function mustBeSignedIn(resolver) {
   return (root, args, { user }) => {
     if (!user || !user.signedIn) {
@@ -83,4 +87,6 @@ routes.post('/signout', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-module.exports = { routes, getUser, mustBeSignedIn };
+module.exports = {
+  routes, getUser, mustBeSignedIn, resolveUser,
+};
