@@ -8,7 +8,7 @@ import IssueAddNavItem from './IssueAddNavItem.jsx';
 import Search from './Search.jsx';
 import SignInNavItem from './SignInNavItem.jsx';
 
-function NavBar() {
+function NavBar({ user, onUserChange }) {
   return (
     // IMP-DIFF: Added fluid attribute to make it look pretier on wide screens.
     <Navbar fluid>
@@ -32,8 +32,8 @@ function NavBar() {
         </Navbar.Form>
       </Col>
       <Nav pullRight>
-        <IssueAddNavItem />
-        <SignInNavItem />
+        <IssueAddNavItem user={user} />
+        <SignInNavItem user={user} onUserChange={onUserChange} />
         <NavDropdown
           id="user-dropdown"
           title={<Glyphicon glyph="option-vertical" />}
@@ -59,14 +59,39 @@ function Footer() {
   );
 }
 
-export default function Page() {
-  return (
-    <div>
-      <NavBar />
-      <Grid fluid>
-        <Contents />
-      </Grid>
-      <Footer />
-    </div>
-  );
+export default class Page extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onUserChange = this.onUserChange.bind(this);
+
+    this.state = { user: {} };
+  }
+
+  async componentDidMount() {
+    const apiEndpoint = window.ENV.UI_AUTH_ENDPOINT;
+    const response = await fetch(`${apiEndpoint}/user`, {
+      method: 'POST',
+    });
+    const body = await response.text();
+    const result = JSON.parse(body);
+    const { signedIn: isSignedIn, givenName } = result;
+    this.setState({ user: { isSignedIn, givenName } });
+  }
+
+  onUserChange(user) {
+    this.setState({ user });
+  }
+
+  render() {
+    const { user } = this.state;
+    return (
+      <div>
+        <NavBar user={user} onUserChange={this.onUserChange} />
+        <Grid fluid>
+          <Contents />
+        </Grid>
+        <Footer />
+      </div>
+    );
+  }
 }
