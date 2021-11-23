@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "10.x",
+    "npm": "6.x"
+  },
   "scripts": {
     "#start": "UI Server. HMR is enabled in dev mode.",
     "start": "node dist/server.js",
@@ -13,6 +17,7 @@
     "#dev-all": "Dev mode: Watch for server changes and start UI  server.",
     "dev-all": "rm dist/* && npm run watch-server-hmr & sleep 5 && npm start",
     "lint": "eslint server src browser --ext js,jsx",
+    "heroku-postbuild": "npm run compile && ln -fs ../node_modules/bootstrap/dist public/bootstrap",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
