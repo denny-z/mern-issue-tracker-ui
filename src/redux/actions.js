@@ -1,9 +1,11 @@
 /* eslint-disable import/prefer-default-export */
 
-import { ISSUE_REPORT_QUERY } from '../api/issue_queries.js';
+import { ISSUE_LIST_QUERY, ISSUE_PREVIEW_QUERY, ISSUE_REPORT_QUERY } from '../api/issue_queries.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
-import { STATS_CLEAR, STATS_LOADED } from './types.js';
+import {
+  ISSUES_LIST_LOADED, ISSUE_PREVIEW_LOADED, STATS_CLEAR, STATS_LOADED,
+} from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
 export function loadStats(match, search, showError) {
@@ -22,5 +24,42 @@ export function loadStats(match, search, showError) {
 export function clearStats() {
   return {
     type: STATS_CLEAR,
+  };
+}
+
+export function loadIssues(match, search, showError) {
+  return async (dispatch) => {
+    const params = new URLSearchParams(search);
+    const vars = { hasSelection: false, selectedId: 0 };
+    Object.assign(vars, prepareIssueFilterVars(params));
+
+    const { params: { id } } = match;
+    const idInt = parseInt(id, 10);
+    if (!Number.isNaN(idInt)) {
+      vars.hasSelection = true;
+      vars.selectedId = idInt;
+    }
+    let page = params.get('page', 10);
+    if (Number.isNaN(page)) page = 1;
+    vars.page = page;
+
+    const data = await graphQLFetch(ISSUE_LIST_QUERY, vars, showError);
+
+    dispatch({
+      type: ISSUES_LIST_LOADED,
+      payload: data,
+    });
+  };
+}
+
+export function loadIssuePreview(id, showError) {
+  return async (dispatch) => {
+    const vars = { id };
+    const data = await graphQLFetch(ISSUE_PREVIEW_QUERY, vars, showError);
+
+    dispatch({
+      type: ISSUE_PREVIEW_LOADED,
+      payload: data,
+    });
   };
 }

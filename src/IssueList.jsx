@@ -1,67 +1,17 @@
-import URLSearchParams from 'url-search-params';
 import React from 'react';
 import { Button, Panel } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import graphQLFetch from './graphQLFetch.js';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
-import store from './store.js';
-import prepareIssueFilterVars from './prepareIssueFilterVars.js';
 import PagintationWithSections from './PaginationWithSections.jsx';
+import { loadIssuePreview, loadIssues } from './redux/actions.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
-    const params = new URLSearchParams(search);
-    const vars = { hasSelection: false, selectedId: 0 };
-    Object.assign(vars, prepareIssueFilterVars(params));
-
-    const { params: { id } } = match;
-    const idInt = parseInt(id, 10);
-    if (!Number.isNaN(idInt)) {
-      vars.hasSelection = true;
-      vars.selectedId = idInt;
-    }
-    let page = params.get('page', 10);
-    if (Number.isNaN(page)) page = 1;
-    vars.page = page;
-
-    const query = `
-      query IssueList(
-        $status: StatusType,
-        $effortMin: Int,
-        $effortMax: Int,
-        $hasSelection: Boolean!,
-        $selectedId: Int!,
-        $page: Int
-      ){
-        issuesList(
-          status: $status
-          effortMin: $effortMin
-          effortMax: $effortMax
-          page: $page
-        ) {
-          issues { 
-            id
-            title
-            owner
-            status
-            created
-            effort
-            due
-          }
-          pages
-        }
-        
-        issue(id: $selectedId) @include (if: $hasSelection) {
-          id 
-          description
-        }
-      }
-    `;
-
-    const data = await graphQLFetch(query, vars, showError);
-    return data;
+    return loadIssues(match, search, showError);
   }
 
   constructor() {
@@ -69,23 +19,20 @@ class IssueList extends React.Component {
     this.closeIssue = this.closeIssue.bind(this);
     this.deleteIssue = this.deleteIssue.bind(this);
     this.restoreIssue = this.restoreIssue.bind(this);
-
-    const initialData = store.initialData || { issuesList: {} };
-    const {
-      issuesList: { issues, pages: totalPages }, issue: selectedIssue,
-    } = initialData;
-    delete store.initialData;
-
-    this.state = {
-      issues,
-      selectedIssue,
-      totalPages,
-    };
   }
 
+  // TODO: [react-redux] To fix.
+  // Steps:
+  // 1. Enter list page. You see issues with id e.g. 1 and so on.
+  // 2. Click to open page e.g. 3
+  // 3. You see issues e.g. 21 and so on.
+  // 4. Go to any other page e.g. Report
+  // 5. Go back to list page by clicking "List" in navbar.
+  // Actual result: You see page 3 with issue id 21.
+  // Expected result: You see page 1 with issue id 1.
   componentDidMount() {
-    const { issues } = this.state;
-    if (issues == null) this.loadData();
+    const { isLoaded } = this.props;
+    if (!isLoaded) this.loadData();
   }
 
   componentDidUpdate(prevProps) {
@@ -109,34 +56,29 @@ class IssueList extends React.Component {
   }
 
   async loadData() {
-    const { match, location: { search }, showError } = this.props;
-    const data = await IssueList.fetchData(match, search, showError);
-    if (data) {
-      this.setState({
-        issues: data.issuesList.issues,
-        totalPages: data.issuesList.pages,
-        selectedIssue: data.issue,
-      });
-    }
+    const {
+      match, location: { search },
+      showError,
+      dispatch,
+    } = this.props;
+
+    dispatch(loadIssues(match, search, showError));
   }
 
-  // This function should be used when only selected issue. It will help to reduce
+  // INFO: This function should be used when only selected issue. It will help to reduce
   // network trafic if use loadData, because it fetches issuesList too.
   async loadSelectedIssue() {
-    const query = `
-      query SelectedIssue($id: Int!) {
-        issue(id: $id) {
-          id description
-        }
-      }
-    `;
-    const { match: { params: { id } }, showError } = this.props;
-    const vars = { id };
+    const {
+      match: { params: { id } },
+      showError,
+      dispatch,
+    } = this.props;
 
-    const data = await graphQLFetch(query, vars, showError);
-    if (data) this.setState({ selectedIssue: data.issue });
+    dispatch(loadIssuePreview(id, showError));
   }
 
+  // TODO: [react-redux] fix it.
+  // Use dispatch instead of this.setState. Handle "closed" status change in reducer.
   async closeIssue(id) {
     const query = `
       mutation CloseIssue($id: Int!) {
@@ -216,13 +158,13 @@ class IssueList extends React.Component {
   }
 
   render() {
-    const { issues } = this.state;
-    if (issues == null) return null;
+    const { issues, isLoaded } = this.props;
+    if (!isLoaded) return null;
 
     const { location: { search } } = this.props;
     const hasFilter = search !== '';
 
-    const { selectedIssue, totalPages } = this.state;
+    const { selectedIssue, totalPages } = this.props;
 
     return (
       <React.Fragment>
@@ -242,6 +184,15 @@ class IssueList extends React.Component {
   }
 }
 
-const IssueListWithToast = withToast(IssueList);
-IssueListWithToast.fetchData = IssueList.fetchData;
-export default IssueListWithToast;
+const mapStateToProps = ({ issuesList }) => ({
+  totalPages: issuesList.totalPages,
+  issues: issuesList.issues,
+  selectedIssue: issuesList.selectedIssue,
+  isLoaded: issuesList.isLoaded,
+});
+
+const WithToast = withToast(IssueList);
+const Connected = connect(mapStateToProps, null)(WithToast);
+
+Connected.fetchData = IssueList.fetchData;
+export default Connected;
