@@ -8,7 +8,7 @@ import graphQLFetch from './graphQLFetch.js';
 import IssueAddNavItem from './IssueAddNavItem.jsx';
 import Search from './Search.jsx';
 import SignInNavItem from './SignInNavItem.jsx';
-import store from './store.js';
+import simpleStore from './store.js';
 import UserContext from './UserContext.jsx';
 
 function NavBar({ onUserChange }) {
@@ -76,8 +76,8 @@ export default class Page extends React.Component {
     super(props);
     this.onUserChange = this.onUserChange.bind(this);
 
-    const user = store.userData ? store.userData.user : null;
-    delete store.userData;
+    const user = simpleStore.userData ? simpleStore.userData.user : null;
+    delete simpleStore.userData;
     this.state = { user };
   }
 

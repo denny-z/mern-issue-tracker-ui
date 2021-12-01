@@ -1,48 +1,27 @@
 import React, { Component } from 'react';
 import { Panel, Table } from 'react-bootstrap';
-import URLSearchParams from 'url-search-params';
-import graphQLFetch from './graphQLFetch.js';
+import { connect } from 'react-redux';
+import simpleStore from './store.js';
 import IssueFilter from './IssueFilter.jsx';
-import prepareIssueFilterVars from './prepareIssueFilterVars.js';
-import store from './store.js';
 import withToast from './withToast.jsx';
-
-// IDEA: This can be extracted to a separate file to reuse in other places of application.
-// E.g. select for IssueFilter component
-const STATUSES = Object.freeze(['New', 'Assigned', 'Fixed', 'Closed']);
+import { ISSUE_STATUS_LIST } from './constants.js';
+import { loadStats } from './redux/actions.js';
 
 class IssueReport extends Component {
   static async fetchData(match, search, showError) {
-    const params = new URLSearchParams(search);
-    const vars = prepareIssueFilterVars(params);
-    const query = `query IssueReport(
-      $status: StatusType
-      $effortMin: Int
-      $effortMax: Int
-    ) {
-      issueCounts(
-        status: $status,
-        effortMin: $effortMin
-        effortMax: $effortMax
-      ) {
-        owner ${STATUSES.join(' ')}
-      }
-    }
-    `;
-
-    const data = await graphQLFetch(query, vars, showError);
-    return data;
+    return loadStats(match, search, showError);
   }
 
   constructor(props) {
     super(props);
-    const stats = store.initialData ? store.initialData.issueCounts : null;
-    delete store.initialData;
-    this.state = { stats };
+    simpleStore.initialData = null;
   }
 
+  // TODO: [react-redux] To fix: data is not refreshed after second enter to issue report page.
+  // This is due to check for stats == null. 
+  // Need to decide whether need to empty the data in store on component unmount.
   componentDidMount() {
-    const { stats } = this.state;
+    const { stats } = this.props;
     if (stats == null) this.loadData();
   }
 
@@ -55,13 +34,15 @@ class IssueReport extends Component {
   }
 
   async loadData() {
-    const { location: { search }, match, showError } = this.props;
-    const data = await IssueReport.fetchData(match, search, showError);
-    if (data) this.setState({ stats: data.issueCounts });
+    const {
+      location: { search }, match, showError, dispatch,
+    } = this.props;
+    const toDispatch = loadStats(match, search, showError);
+    dispatch(toDispatch);
   }
 
   renderStatRows() {
-    const { stats } = this.state;
+    const { stats } = this.props;
     if (stats == null) return null;
 
     const result = stats.map((counts) => {
@@ -73,7 +54,7 @@ class IssueReport extends Component {
       return (
         <tr key={counts.owner}>
           <td>{counts.owner}</td>
-          {STATUSES.map(status => (
+          {ISSUE_STATUS_LIST.map(status => (
             <td key={status}>{counts[status]}</td>
           ))}
           <td>{sumOfCounts}</td>
@@ -84,7 +65,7 @@ class IssueReport extends Component {
     const sumRow = (
       <tr key="__sumOfColumn">
         <td><b><small>Total by status</small></b></td>
-        {STATUSES.map(status => (
+        {ISSUE_STATUS_LIST.map(status => (
           <td key={`__sumOfColumn_${status}`}>
             {stats.reduce((previousValue, counts) => (previousValue + counts[status]), 0)}
           </td>
@@ -98,7 +79,7 @@ class IssueReport extends Component {
   }
 
   render() {
-    const headerColumns = STATUSES.map(status => (
+    const headerColumns = ISSUE_STATUS_LIST.map(status => (
       <th key={status}>{status}</th>
     ));
     headerColumns.push(<th key="__sumOfRow"><small>Total by owner</small></th>);
@@ -130,6 +111,10 @@ class IssueReport extends Component {
   }
 }
 
-const IssueReportWithToast = withToast(IssueReport);
-IssueReportWithToast.fetchData = IssueReport.fetchData;
-export default IssueReportWithToast;
+const mapStateToProps = state => ({
+  stats: state.issueCounts,
+});
+const Connected = connect(mapStateToProps, null)(IssueReport);
+const WithToast = withToast(Connected);
+WithToast.fetchData = IssueReport.fetchData;
+export default WithToast;
