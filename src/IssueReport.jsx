@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Panel, Table } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import simpleStore from './store.js';
 import IssueFilter from './IssueFilter.jsx';
 import withToast from './withToast.jsx';
 import { ISSUE_STATUS_LIST } from './constants.js';
@@ -12,17 +11,12 @@ class IssueReport extends Component {
     return loadStats(match, search, showError);
   }
 
-  constructor(props) {
-    super(props);
-    simpleStore.initialData = null;
-  }
-
   // TODO: [react-redux] To fix: data is not refreshed after second enter to issue report page.
   // This is due to check for stats == null. 
   // Need to decide whether need to empty the data in store on component unmount.
   componentDidMount() {
-    const { stats } = this.props;
-    if (stats == null) this.loadData();
+    const { isLoaded } = this.props;
+    if (!isLoaded) this.loadData();
   }
 
   componentDidUpdate(prevProps) {
@@ -37,13 +31,12 @@ class IssueReport extends Component {
     const {
       location: { search }, match, showError, dispatch,
     } = this.props;
-    const toDispatch = loadStats(match, search, showError);
-    dispatch(toDispatch);
+    dispatch(loadStats(match, search, showError));
   }
 
   renderStatRows() {
-    const { stats } = this.props;
-    if (stats == null) return null;
+    const { stats, isLoaded } = this.props;
+    if (!isLoaded) return null;
 
     const result = stats.map((counts) => {
       const { owner, ...statusToCount } = counts;
@@ -112,7 +105,8 @@ class IssueReport extends Component {
 }
 
 const mapStateToProps = state => ({
-  stats: state.issueCounts,
+  stats: state.issueCounts.stats,
+  isLoaded: state.issueCounts.isLoaded,
 });
 const Connected = connect(mapStateToProps, null)(IssueReport);
 const WithToast = withToast(Connected);

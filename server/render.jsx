@@ -26,7 +26,7 @@ async function render(req, res) {
       .fetchData(match, search, console.error, cookie);
     if (typeof fetchDataResult === 'function') {
       await fetchDataResult((action) => {
-        initialData = action.payload;
+        initialData = action;
       });
     } else {
       initialData = fetchDataResult;
@@ -38,7 +38,10 @@ async function render(req, res) {
   const userData = await Page.fetchData(null, null, null, cookie);
   simpleStore.userData = userData;
 
-  initStore(initialData);
+  initStore();
+  if (initialData && initialData.type) {
+    store.dispatch(initialData);
+  }
 
   const context = {};
 

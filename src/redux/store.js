@@ -6,7 +6,7 @@ import rootReducer from './rootReducer.js';
 // eslint-disable-next-line import/no-mutable-exports
 let store;
 
-function initStore(initialData) {
+function initStore(initialData = {}) {
   store = createStore(
     rootReducer,
     initialData,

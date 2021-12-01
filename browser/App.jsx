@@ -9,11 +9,16 @@ import simpleStore from '../src/store.js';
 import { store, initStore } from '../src/redux/store.js';
 
 // eslint-disable-next-line no-underscore-dangle
-simpleStore.initialData = window.__INITIAL_DATA__;
+const initialData = window.__INITIAL_DATA__;
 // eslint-disable-next-line no-underscore-dangle
 simpleStore.userData = window.__USER_DATA__;
 
-initStore(simpleStore.initialData);
+if (initialData && initialData.type) {
+  initStore();
+  store.dispatch(initialData);
+} else {
+  simpleStore.initialData = initialData;
+}
 
 const element = (
   <Router>
