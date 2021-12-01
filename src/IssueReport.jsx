@@ -4,16 +4,13 @@ import { connect } from 'react-redux';
 import IssueFilter from './IssueFilter.jsx';
 import withToast from './withToast.jsx';
 import { ISSUE_STATUS_LIST } from './constants.js';
-import { loadStats } from './redux/actions.js';
+import { loadStats, clearStats } from './redux/actions.js';
 
 class IssueReport extends Component {
   static async fetchData(match, search, showError) {
     return loadStats(match, search, showError);
   }
 
-  // TODO: [react-redux] To fix: data is not refreshed after second enter to issue report page.
-  // This is due to check for stats == null. 
-  // Need to decide whether need to empty the data in store on component unmount.
   componentDidMount() {
     const { isLoaded } = this.props;
     if (!isLoaded) this.loadData();
@@ -25,6 +22,11 @@ class IssueReport extends Component {
     if (prevSearch !== search) {
       this.loadData();
     }
+  }
+
+  componentWillUnmount() {
+    const { dispatch } = this.props;
+    dispatch(clearStats());
   }
 
   async loadData() {

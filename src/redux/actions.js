@@ -3,7 +3,7 @@
 import { ISSUE_REPORT_QUERY } from '../api/issue_queries.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
-import { STATS_LOADED } from './types.js';
+import { STATS_CLEAR, STATS_LOADED } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
 export function loadStats(match, search, showError) {
@@ -16,5 +16,11 @@ export function loadStats(match, search, showError) {
       type: STATS_LOADED,
       payload: data,
     });
+  };
+}
+
+export function clearStats() {
+  return {
+    type: STATS_CLEAR,
   };
 }
