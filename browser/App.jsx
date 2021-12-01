@@ -13,8 +13,8 @@ const initialData = window.__INITIAL_DATA__;
 // eslint-disable-next-line no-underscore-dangle
 simpleStore.userData = window.__USER_DATA__;
 
+initStore();
 if (initialData && initialData.type) {
-  initStore();
   store.dispatch(initialData);
 } else {
   simpleStore.initialData = initialData;
