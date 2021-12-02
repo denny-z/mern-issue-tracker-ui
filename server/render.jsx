@@ -16,6 +16,8 @@ async function render(req, res) {
   );
   const { cookie } = req.headers;
 
+  initStore();
+
   let initialData;
   if (activeRoute && activeRoute.component.fetchData) {
     const match = matchPath(req.path, activeRoute);
@@ -25,9 +27,8 @@ async function render(req, res) {
     const fetchDataResult = await activeRoute.component
       .fetchData(match, search, console.error, cookie);
     if (typeof fetchDataResult === 'function') {
-      await fetchDataResult((action) => {
-        initialData = action;
-      });
+      const dispatchMock = (action) => { initialData = action; };
+      await fetchDataResult(dispatchMock, store.getState);
     } else {
       initialData = fetchDataResult;
     }
@@ -38,7 +39,6 @@ async function render(req, res) {
   const userData = await Page.fetchData(null, null, null, cookie);
   simpleStore.userData = userData;
 
-  initStore();
   if (initialData && initialData.type) {
     store.dispatch(initialData);
   }

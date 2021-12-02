@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import {
-  ISSUES_LIST_LOADED, ISSUE_PREVIEW_LOADED, STATS_CLEAR, STATS_LOADED,
+  ISSUES_LIST_LOADED, ISSUES_LIST_LOADING, ISSUE_PREVIEW_LOADED, STATS_CLEAR, STATS_LOADED,
 } from './types.js';
 
 function statsReducer(state = {}, action) {
@@ -17,12 +17,18 @@ function issuesReducer(state = {}, action) {
   const p = action.payload;
 
   switch (action.type) {
+    case ISSUES_LIST_LOADING:
+      return {
+        ...state,
+        isLoaded: false,
+      };
     case ISSUES_LIST_LOADED:
       return {
         issues: p.issuesList.issues,
         selectedIssue: p.issue,
         totalPages: p.issuesList.pages,
         isLoaded: true,
+        currentQueryParams: p.meta.currentQueryParams,
       };
     case ISSUE_PREVIEW_LOADED:
       return {

@@ -21,18 +21,9 @@ class IssueList extends React.Component {
     this.restoreIssue = this.restoreIssue.bind(this);
   }
 
-  // TODO: [react-redux] To fix.
-  // Steps:
-  // 1. Enter list page. You see issues with id e.g. 1 and so on.
-  // 2. Click to open page e.g. 3
-  // 3. You see issues e.g. 21 and so on.
-  // 4. Go to any other page e.g. Report
-  // 5. Go back to list page by clicking "List" in navbar.
-  // Actual result: You see page 3 with issue id 21.
-  // Expected result: You see page 1 with issue id 1.
+  // INFO: Store will identify whether need to reload data if needed.
   componentDidMount() {
-    const { isLoaded } = this.props;
-    if (!isLoaded) this.loadData();
+    this.loadData();
   }
 
   componentDidUpdate(prevProps) {
