@@ -61,3 +61,18 @@ export const ISSUE_PREVIEW_QUERY = `
     }
   }
 `;
+
+export const ISSUE_CLOSE_QUERY = `
+  mutation CloseIssue($id: Int!) {
+    updateIssue(id: $id, changes: { status: Closed }) {
+      id
+      title
+      status
+      owner
+      effort
+      created
+      due
+      description
+    }
+  }
+`;

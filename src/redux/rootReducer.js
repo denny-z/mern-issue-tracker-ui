@@ -1,6 +1,11 @@
 import { combineReducers } from 'redux';
 import {
-  ISSUES_LIST_LOADED, ISSUES_LIST_LOADING, ISSUE_PREVIEW_LOADED, STATS_CLEAR, STATS_LOADED,
+  ISSUES_LIST_LOADED,
+  ISSUES_LIST_LOADING,
+  ISSUE_PREVIEW_LOADED,
+  ISSUE_UPDATED,
+  STATS_CLEAR,
+  STATS_LOADED,
 } from './types.js';
 
 function statsReducer(state = {}, action) {
@@ -35,6 +40,18 @@ function issuesReducer(state = {}, action) {
         ...state,
         selectedIssue: p.issue,
       };
+    // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
+    case ISSUE_UPDATED: {
+      const newIssues = [...state.issues];
+      const newIssue = action.payload.updateIssue;
+      const issueIndex = newIssues.findIndex(issue => issue.id === newIssue.id);
+      newIssues.splice(issueIndex, 1, newIssue);
+
+      return {
+        ...state,
+        issues: newIssues,
+      };
+    }
     default: return state;
   }
 }

@@ -7,7 +7,7 @@ import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import PagintationWithSections from './PaginationWithSections.jsx';
-import { loadIssuePreview, loadIssues } from './redux/actions.js';
+import { issueClose, loadIssuePreview, loadIssues } from './redux/actions.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
@@ -68,41 +68,9 @@ class IssueList extends React.Component {
     dispatch(loadIssuePreview(id, showError));
   }
 
-  // TODO: [react-redux] fix it.
-  // Use dispatch instead of this.setState. Handle "closed" status change in reducer.
   async closeIssue(id) {
-    const query = `
-      mutation CloseIssue($id: Int!) {
-        updateIssue(id: $id, changes: { status: Closed }) {
-          id
-          title
-          status
-          owner
-          effort
-          created
-          due
-          description
-        }
-      }
-    `;
-
-    const { showError } = this.props;
-    const data = await graphQLFetch(query, { id }, showError);
-    if (data) {
-      this.setState((prevState) => {
-        const newList = [...prevState.issues];
-        const issueIndex = newList.findIndex(issue => issue.id === id);
-        if (issueIndex === -1) {
-          showError(`Looks like the list in not in sync. Was not able to find issue ID ${id}. Refreshing list...`);
-          this.loadData();
-          return { issues: [] };
-        }
-        newList[issueIndex] = data.updateIssue;
-        return { issues: newList };
-      });
-    } else {
-      this.loadData();
-    }
+    const { showError, dispatch } = this.props;
+    dispatch(issueClose(id, showError));
   }
 
   async deleteIssue(id) {
