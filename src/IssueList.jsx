@@ -181,9 +181,7 @@ const mapStateToProps = ({ issuesList }) => ({
   selectedIssue: issuesList.selectedIssue,
   isLoaded: issuesList.isLoaded,
 });
-
-const WithToast = withToast(IssueList);
-const Connected = connect(mapStateToProps, null)(WithToast);
-
-Connected.fetchData = IssueList.fetchData;
-export default Connected;
+const Connected = connect(mapStateToProps, null)(IssueList);
+const WithToast = withToast(Connected);
+WithToast.fetchData = IssueList.fetchData;
+export default WithToast;
