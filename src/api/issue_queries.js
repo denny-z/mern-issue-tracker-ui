@@ -76,3 +76,9 @@ export const ISSUE_CLOSE_QUERY = `
     }
   }
 `;
+
+export const ISSUE_DELETE_QUERY = `
+  mutation DeleteIssue($id: Int!) {
+    deleteIssue(id: $id)
+  }
+`;

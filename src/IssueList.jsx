@@ -7,7 +7,9 @@ import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import PagintationWithSections from './PaginationWithSections.jsx';
-import { issueClose, loadIssuePreview, loadIssues } from './redux/actions.js';
+import {
+  issueClose, issueDelete, loadIssuePreview, loadIssues,
+} from './redux/actions.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
@@ -74,13 +76,10 @@ class IssueList extends React.Component {
   }
 
   async deleteIssue(id) {
-    const { showError, showSuccess } = this.props;
-    const query = `
-      mutation DeleteIssue($id: Int!) {
-        deleteIssue(id: $id)
-      }
-    `;
-    const data = await graphQLFetch(query, { id }, showError);
+    const { showError, showSuccess, dispatch } = this.props;
+
+    // TODO: [react-redux] fix it.
+    // Move restoreIssue functionality to action creator, handle action in reducer.
     const undoMessage = (
       <span>
         {`Deleted issue ${id} successfully.`}
@@ -90,18 +89,21 @@ class IssueList extends React.Component {
       </span>
     );
 
-    if (data && data.deleteIssue) {
-      this.setState(prevState => ({ issues: prevState.issues.filter(issue => issue.id !== id) }));
-
-      const { location: { pathname, search }, history } = this.props;
-      if (pathname === `/issues/${id}`) {
-        history.push({ pathname: '/issues', search });
-      }
-
+    const showSuccessWithMessage = () => {
       showSuccess(undoMessage);
-    } else {
-      this.loadData();
-    }
+    };
+
+    dispatch(issueDelete(id, showError, showSuccessWithMessage));
+
+    // TODO: [react-redux] fix it.
+    // Handle unselect of issue preview in reducer.
+    // This piece of code was in use before redux added.
+    // if (pathname === `/issues/${id}`) {
+    //   history.push({ pathname: '/issues', search });
+    // }
+
+    // TODO: [react-redux] fix it.
+    // Handle case when server side returned data.deletedIssue === false.
   }
 
   async restoreIssue(id) {

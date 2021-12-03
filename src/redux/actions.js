@@ -1,7 +1,11 @@
 /* eslint-disable import/prefer-default-export */
 
 import {
-  ISSUE_CLOSE_QUERY, ISSUE_LIST_QUERY, ISSUE_PREVIEW_QUERY, ISSUE_REPORT_QUERY,
+  ISSUE_CLOSE_QUERY,
+  ISSUE_DELETE_QUERY,
+  ISSUE_LIST_QUERY,
+  ISSUE_PREVIEW_QUERY,
+  ISSUE_REPORT_QUERY,
 } from '../api/issue_queries.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
@@ -12,6 +16,7 @@ import {
   ISSUES_LIST_LOADING,
   ISSUE_PREVIEW_LOADED,
   ISSUE_UPDATED,
+  ISSUE_DELETED,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -94,5 +99,19 @@ export function issueClose(id, showError) {
       type: ISSUE_UPDATED,
       payload: data,
     });
+  };
+}
+
+export function issueDelete(id, showError, showSuccessWithMessage) {
+  return async (dispatch) => {
+    const data = await graphQLFetch(ISSUE_DELETE_QUERY, { id }, showError);
+
+    if (data && data.deleteIssue) {
+      showSuccessWithMessage();
+      dispatch({
+        type: ISSUE_DELETED,
+        payload: { id },
+      });
+    }
   };
 }

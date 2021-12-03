@@ -2,6 +2,7 @@ import { combineReducers } from 'redux';
 import {
   ISSUES_LIST_LOADED,
   ISSUES_LIST_LOADING,
+  ISSUE_DELETED,
   ISSUE_PREVIEW_LOADED,
   ISSUE_UPDATED,
   STATS_CLEAR,
@@ -47,6 +48,14 @@ function issuesReducer(state = {}, action) {
       const issueIndex = newIssues.findIndex(issue => issue.id === newIssue.id);
       newIssues.splice(issueIndex, 1, newIssue);
 
+      return {
+        ...state,
+        issues: newIssues,
+      };
+    }
+    // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
+    case ISSUE_DELETED: {
+      const newIssues = state.issues.filter(issue => issue.id !== action.payload.id);
       return {
         ...state,
         issues: newIssues,
