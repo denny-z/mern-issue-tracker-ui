@@ -6,6 +6,7 @@ import {
   ISSUE_LIST_QUERY,
   ISSUE_PREVIEW_QUERY,
   ISSUE_REPORT_QUERY,
+  ISSUE_RESTORE_QUERY,
 } from '../api/issue_queries.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
@@ -17,6 +18,7 @@ import {
   ISSUE_PREVIEW_LOADED,
   ISSUE_UPDATED,
   ISSUE_DELETED,
+  ISSUE_RESTORED,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -111,6 +113,20 @@ export function issueDelete(id, showError, showSuccessWithMessage) {
       dispatch({
         type: ISSUE_DELETED,
         payload: { id },
+      });
+    }
+  };
+}
+
+export function issueRestore(id, showError, showSuccessWithMessage) {
+  return async (dispatch) => {
+    const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);
+
+    if (data && data.issueRestore) {
+      showSuccessWithMessage();
+      dispatch({
+        type: ISSUE_RESTORED,
+        payload: data,
       });
     }
   };

@@ -4,6 +4,7 @@ import {
   ISSUES_LIST_LOADING,
   ISSUE_DELETED,
   ISSUE_PREVIEW_LOADED,
+  ISSUE_RESTORED,
   ISSUE_UPDATED,
   STATS_CLEAR,
   STATS_LOADED,
@@ -44,7 +45,7 @@ function issuesReducer(state = {}, action) {
     // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
     case ISSUE_UPDATED: {
       const newIssues = [...state.issues];
-      const newIssue = action.payload.updateIssue;
+      const newIssue = p.updateIssue;
       const issueIndex = newIssues.findIndex(issue => issue.id === newIssue.id);
       newIssues.splice(issueIndex, 1, newIssue);
 
@@ -55,7 +56,14 @@ function issuesReducer(state = {}, action) {
     }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
     case ISSUE_DELETED: {
-      const newIssues = state.issues.filter(issue => issue.id !== action.payload.id);
+      const newIssues = state.issues.filter(issue => issue.id !== p.id);
+      return {
+        ...state,
+        issues: newIssues,
+      };
+    }
+    case ISSUE_RESTORED: {
+      const newIssues = state.issues.concat([p.issueRestore]);
       return {
         ...state,
         issues: newIssues,

@@ -1,14 +1,13 @@
 import React from 'react';
 import { Button, Panel } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import graphQLFetch from './graphQLFetch.js';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import PagintationWithSections from './PaginationWithSections.jsx';
 import {
-  issueClose, issueDelete, loadIssuePreview, loadIssues,
+  issueClose, issueDelete, issueRestore, loadIssuePreview, loadIssues,
 } from './redux/actions.js';
 
 class IssueList extends React.Component {
@@ -106,16 +105,10 @@ class IssueList extends React.Component {
     // Handle case when server side returned data.deletedIssue === false.
   }
 
-  async restoreIssue(id) {
-    const query = `mutation RestoreIssue($id: Int!) {
-      issueRestore(id: $id)
-    }`;
-    const { showError, showSuccess } = this.props;
-    const data = await graphQLFetch(query, { id }, showError);
-    if (data && data.issueRestore) {
-      showSuccess(`Issue ${id} restored successfully.`);
-      this.loadData();
-    }
+  restoreIssue(id) {
+    const { showError, showSuccess, dispatch } = this.props;
+    const showSuccessWithMessage = () => showSuccess(`Issue ${id} restored successfully.`);
+    dispatch(issueRestore(id, showError, showSuccessWithMessage));
   }
 
   render() {

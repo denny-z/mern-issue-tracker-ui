@@ -82,3 +82,18 @@ export const ISSUE_DELETE_QUERY = `
     deleteIssue(id: $id)
   }
 `;
+
+// TODO: [react-redux] [graph-fragment] Use fragment in ISSUES_LIST and ISSUE_RESTORE.
+export const ISSUE_RESTORE_QUERY = `
+  mutation RestoreIssue($id: Int!) {
+    issueRestore(id: $id) {
+      id
+      title
+      owner
+      status
+      created
+      effort
+      due
+    }
+  }
+`;
