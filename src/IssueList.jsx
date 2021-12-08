@@ -22,7 +22,6 @@ class IssueList extends React.Component {
     this.restoreIssue = this.restoreIssue.bind(this);
   }
 
-  // INFO: Store will identify whether need to reload data if needed.
   componentDidMount() {
     this.loadData();
   }
@@ -39,7 +38,7 @@ class IssueList extends React.Component {
 
     if (!isIdChanged && !isSearchChanged) return;
 
-    if (isIdChanged && !isSearchChanged) {
+    if (!Number.isNaN(parseInt(id, 10)) && isIdChanged && !isSearchChanged) {
       this.loadSelectedIssue();
       return;
     }
@@ -47,6 +46,7 @@ class IssueList extends React.Component {
     this.loadData();
   }
 
+  // INFO: Store will identify whether need to reload data if needed.
   async loadData() {
     const {
       match, location: { search },
@@ -77,30 +77,24 @@ class IssueList extends React.Component {
   async deleteIssue(id) {
     const { showError, showSuccess, dispatch } = this.props;
 
-    // TODO: [react-redux] fix it.
-    // Move restoreIssue functionality to action creator, handle action in reducer.
-    const undoMessage = (
-      <span>
-        {`Deleted issue ${id} successfully.`}
-        <Button bsStyle="link" onClick={() => this.restoreIssue(id)}>
-          UNDO
-        </Button>
-      </span>
-    );
-
-    const showSuccessWithMessage = () => {
+    const onSuccess = () => {
+      const undoMessage = (
+        <span>
+          {`Deleted issue ${id} successfully.`}
+          <Button bsStyle="link" onClick={() => this.restoreIssue(id)}>
+            UNDO
+          </Button>
+        </span>
+      );
       showSuccess(undoMessage);
+
+      const { history, location: { pathname, search } } = this.props;
+      if (pathname === `/issues/${id}`) {
+        history.push({ pathname: '/issues', search });
+      }
     };
 
-    dispatch(issueDelete(id, showError, showSuccessWithMessage));
-
-    // TODO: [react-redux] fix it.
-    // Handle unselect of issue preview in reducer.
-    // This piece of code was in use before redux added.
-    // if (pathname === `/issues/${id}`) {
-    //   history.push({ pathname: '/issues', search });
-    // }
-
+    dispatch(issueDelete(id, showError, onSuccess));
     // TODO: [react-redux] fix it.
     // Handle case when server side returned data.deletedIssue === false.
   }

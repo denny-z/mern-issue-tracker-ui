@@ -104,16 +104,16 @@ export function issueClose(id, showError) {
   };
 }
 
-export function issueDelete(id, showError, showSuccessWithMessage) {
+export function issueDelete(id, showError, onSuccess) {
   return async (dispatch) => {
     const data = await graphQLFetch(ISSUE_DELETE_QUERY, { id }, showError);
 
     if (data && data.deleteIssue) {
-      showSuccessWithMessage();
       dispatch({
         type: ISSUE_DELETED,
         payload: { id },
       });
+      onSuccess();
     }
   };
 }
@@ -123,11 +123,11 @@ export function issueRestore(id, showError, showSuccessWithMessage) {
     const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);
 
     if (data && data.issueRestore) {
-      showSuccessWithMessage();
       dispatch({
         type: ISSUE_RESTORED,
         payload: data,
       });
+      showSuccessWithMessage();
     }
   };
 }

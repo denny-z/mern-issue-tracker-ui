@@ -55,11 +55,17 @@ function issuesReducer(state = {}, action) {
       };
     }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
+    // IDEA: [react-redux] Trigger page reload when the last issue in state.issues deleted.
     case ISSUE_DELETED: {
       const newIssues = state.issues.filter(issue => issue.id !== p.id);
+      let newSelectedIssue = state.selectedIssue;
+      if (state.selectedIssue.id === p.id) {
+        newSelectedIssue = null;
+      }
       return {
         ...state,
         issues: newIssues,
+        selectedIssue: newSelectedIssue,
       };
     }
     case ISSUE_RESTORED: {
