@@ -3,7 +3,8 @@ import {
   ISSUES_LIST_LOADED,
   ISSUES_LIST_LOADING,
   ISSUE_DELETED,
-  ISSUE_PREVIEW_LOADED,
+  ISSUE_SELECTED,
+  ISSUE_LOADED,
   ISSUE_RESTORED,
   ISSUE_UPDATED,
   STATS_CLEAR,
@@ -29,23 +30,48 @@ function issuesReducer(state = {}, action) {
         ...state,
         isLoaded: false,
       };
-    case ISSUES_LIST_LOADED:
+    case ISSUES_LIST_LOADED: {
+      const issues = [...p.issuesList.issues];
+      const seelectedIssueId = p.issue && p.issue.id;
+      if (seelectedIssueId != null) {
+        const foundIssueIndex = issues.findIndex(i => i.id === seelectedIssueId);
+        if (foundIssueIndex !== -1) {
+          Object.assign(issues[foundIssueIndex], p.issue);
+        }
+      }
+
       return {
-        issues: p.issuesList.issues,
-        selectedIssue: p.issue,
+        issues,
+        selectedIssueId: seelectedIssueId,
         totalPages: p.issuesList.pages,
         isLoaded: true,
         currentQueryParams: p.meta.currentQueryParams,
       };
-    case ISSUE_PREVIEW_LOADED:
+    }
+    case ISSUE_SELECTED: {
       return {
         ...state,
-        selectedIssue: p.issue,
+        selectedIssueId: p.id,
       };
+    }
+    // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
+    case ISSUE_LOADED: {
+      const newIssues = [...state.issues];
+      const issuePreview = p.issue;
+      const issueIndex = newIssues.findIndex(issue => issue.id === issuePreview.id);
+      if (issueIndex !== -1) {
+        Object.assign(newIssues[issueIndex], issuePreview);
+      }
+
+      return {
+        ...state,
+        issues: newIssues,
+      };
+    }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
     case ISSUE_UPDATED: {
       const newIssues = [...state.issues];
-      const newIssue = p.updateIssue;
+      const newIssue = p.issueUpdate;
       const issueIndex = newIssues.findIndex(issue => issue.id === newIssue.id);
       newIssues.splice(issueIndex, 1, newIssue);
 
@@ -58,14 +84,16 @@ function issuesReducer(state = {}, action) {
     // IDEA: [react-redux] Trigger page reload when the last issue in state.issues deleted.
     case ISSUE_DELETED: {
       const newIssues = state.issues.filter(issue => issue.id !== p.id);
-      let newSelectedIssue = state.selectedIssue;
-      if (state.selectedIssue.id === p.id) {
-        newSelectedIssue = null;
+
+      let selectedId = state.selectedIssueId;
+      if (state.selectedIssueId === p.id) {
+        selectedId = null;
       }
+
       return {
         ...state,
         issues: newIssues,
-        selectedIssue: newSelectedIssue,
+        selectedIssueId: selectedId,
       };
     }
     case ISSUE_RESTORED: {

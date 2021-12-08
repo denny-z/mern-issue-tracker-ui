@@ -10,15 +10,17 @@ import {
 } from '../api/issue_queries.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
+import { getSelectedIssue } from './selectors.js';
 import {
   STATS_CLEAR,
   STATS_LOADED,
   ISSUES_LIST_LOADED,
   ISSUES_LIST_LOADING,
-  ISSUE_PREVIEW_LOADED,
+  ISSUE_LOADED,
   ISSUE_UPDATED,
   ISSUE_DELETED,
   ISSUE_RESTORED,
+  ISSUE_SELECTED,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -79,12 +81,20 @@ export function loadIssues(match, search, showError) {
 }
 
 export function loadIssuePreview(id, showError) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     const vars = { id };
+    dispatch({
+      type: ISSUE_SELECTED,
+      payload: { id },
+    });
+    // INFO: This is not cache field loaded by preview.
+    const selectedIssue = getSelectedIssue(getState());
+    if (selectedIssue && 'description' in selectedIssue) return;
+
     const data = await graphQLFetch(ISSUE_PREVIEW_QUERY, vars, showError);
 
     dispatch({
-      type: ISSUE_PREVIEW_LOADED,
+      type: ISSUE_LOADED,
       payload: data,
     });
   };

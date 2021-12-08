@@ -66,7 +66,7 @@ class IssueList extends React.Component {
       dispatch,
     } = this.props;
 
-    dispatch(loadIssuePreview(id, showError));
+    dispatch(loadIssuePreview(parseInt(id, 10), showError));
   }
 
   async closeIssue(id) {
@@ -112,7 +112,7 @@ class IssueList extends React.Component {
     const { location: { search } } = this.props;
     const hasFilter = search !== '';
 
-    const { selectedIssue, totalPages } = this.props;
+    const { totalPages } = this.props;
 
     return (
       <React.Fragment>
@@ -125,7 +125,7 @@ class IssueList extends React.Component {
           </Panel.Body>
         </Panel>
         <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
-        <IssueDetail issue={selectedIssue} />
+        <IssueDetail />
         <PagintationWithSections search={search} totalPages={totalPages} />
       </React.Fragment>
     );
@@ -135,7 +135,6 @@ class IssueList extends React.Component {
 const mapStateToProps = ({ issuesList }) => ({
   totalPages: issuesList.totalPages,
   issues: issuesList.issues,
-  selectedIssue: issuesList.selectedIssue,
   isLoaded: issuesList.isLoaded,
 });
 const Connected = connect(mapStateToProps, null)(IssueList);
