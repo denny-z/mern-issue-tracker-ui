@@ -97,3 +97,18 @@ export const ISSUE_RESTORE_QUERY = `
     }
   }
 `;
+
+// TODO: [react-redux] [graph-fragment] Use fragment in ISSUES_LIST and ISSUE_RESTORE.
+export const ISSUE_CREATE_QUERY = `
+  mutation AddIssue($issue: IssueInputs!) {
+    addIssue(issue: $issue) {
+      id
+      title
+      owner
+      status
+      created
+      effort
+      due
+    }  
+  }
+`;

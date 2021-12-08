@@ -4,6 +4,7 @@ import {
   Button, Form, FormControl, FormGroup, ControlLabel,
 } from 'react-bootstrap';
 
+// TODO: Remove this component. Use IssueAddNavItem instead.
 export default class IssueAdd extends React.Component {
   static get DAYS_10() {
     return 1000 * 60 * 60 * 24 * 10;

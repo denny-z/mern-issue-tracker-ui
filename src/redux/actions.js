@@ -2,6 +2,7 @@
 
 import {
   ISSUE_CLOSE_QUERY,
+  ISSUE_CREATE_QUERY,
   ISSUE_DELETE_QUERY,
   ISSUE_LIST_QUERY,
   ISSUE_PREVIEW_QUERY,
@@ -21,6 +22,7 @@ import {
   ISSUE_DELETED,
   ISSUE_RESTORED,
   ISSUE_SELECTED,
+  ISSUE_CREATED,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -138,6 +140,20 @@ export function issueRestore(id, showError, showSuccessWithMessage) {
         payload: data,
       });
       showSuccessWithMessage();
+    }
+  };
+}
+
+export function issueCreate(issue, showError, onSuccess) {
+  return async (dispatch) => {
+    const data = await graphQLFetch(ISSUE_CREATE_QUERY, { issue }, showError);
+
+    if (data) {
+      dispatch({
+        type: ISSUE_CREATED,
+        payload: data.addIssue,
+      });
+      onSuccess(data.addIssue);
     }
   };
 }

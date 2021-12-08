@@ -9,6 +9,7 @@ import {
   ISSUE_UPDATED,
   STATS_CLEAR,
   STATS_LOADED,
+  ISSUE_CREATED,
 } from './types.js';
 
 function statsReducer(state = {}, action) {
@@ -52,6 +53,21 @@ function issuesReducer(state = {}, action) {
       return {
         ...state,
         selectedIssueId: p.id,
+      };
+    }
+    // TODO: [react-redux] handle it somehow.
+    // Currently, if user decides to come back (by arrow back browser button),
+    // he will see a newly created issue, even it's not in the right order,
+    // e.g. it should be on 10th page, but it shows on the last opened IssueList page.
+    // This may be a good article to read, but needs RTK (Redux tool kit knowledge):
+    //   https://redux-toolkit.js.org/rtk-query/usage/cache-behavior#default-cache-behavior
+    // such as:
+    //   https://redux.js.org/tutorials/essentials/part-1-overview-concepts
+    case ISSUE_CREATED: {
+      const newIssues = state.issues.concat([p]);
+      return {
+        ...state,
+        issues: newIssues,
       };
     }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
