@@ -23,6 +23,7 @@ import {
   ISSUE_RESTORED,
   ISSUE_SELECTED,
   ISSUE_CREATED,
+  ISSUES_LIST_CACHE_HIT,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -65,12 +66,26 @@ export function loadIssues(match, search, showError) {
     if (Number.isNaN(page)) page = 1;
     vars.page = page;
 
-    const storeQueryParams = getState().issuesList.currentQueryParams;
+    const { queryToIssueIds } = getState().issuesList;
     const currentQueryParams = identifyQueryParams(match, search);
 
-    if (storeQueryParams === currentQueryParams) return;
-
     dispatch({ type: ISSUES_LIST_LOADING });
+    // TODO: [react-redux] fix minor issue.
+    //   Steps:
+    //   1. Go to issues list and select some filers. You are on first page of results.
+    //   2. Click to Page 1. page=1 is added to URL.
+    //   Actual result: data is reloaded.
+    //   Expected result: data should be loaded from cache.
+    //   This may be realted to stringify nature of identifyQueryParams OR
+    //     remove page=1 from URL if first page selected.
+    if (queryToIssueIds[currentQueryParams]) {
+      dispatch({
+        type: ISSUES_LIST_CACHE_HIT,
+        payload: { meta: { currentQueryParams } },
+      });
+      return;
+    }
+
     const data = await graphQLFetch(ISSUE_LIST_QUERY, vars, showError);
     dispatch({
       type: ISSUES_LIST_LOADED,

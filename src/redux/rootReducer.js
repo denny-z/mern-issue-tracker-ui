@@ -10,6 +10,7 @@ import {
   STATS_CLEAR,
   STATS_LOADED,
   ISSUE_CREATED,
+  ISSUES_LIST_CACHE_HIT,
 } from './types.js';
 
 function statsReducer(state = {}, action) {
@@ -31,22 +32,52 @@ function issuesReducer(state = {}, action) {
         ...state,
         isLoaded: false,
       };
+    case ISSUES_LIST_CACHE_HIT:
+      return {
+        ...state,
+        isLoaded: true,
+        currentQueryParams: p.meta.currentQueryParams,
+      };
     case ISSUES_LIST_LOADED: {
-      const issues = [...p.issuesList.issues];
-      const seelectedIssueId = p.issue && p.issue.id;
-      if (seelectedIssueId != null) {
-        const foundIssueIndex = issues.findIndex(i => i.id === seelectedIssueId);
+      // INFO: Cache issues payload starts.
+      const newIssues = p.issuesList.issues;
+      let issues;
+      if (state.issues && state.issues.length) {
+        issues = [...state.issues];
+        newIssues.forEach((newIssue) => {
+          const index = issues.findIndex(issue => issue.id === newIssue.id);
+          if (index !== -1) {
+            Object.assign(issues[index], newIssue);
+          } else {
+            issues.push(newIssue);
+          }
+        });
+      } else {
+        issues = newIssues;
+      }
+
+      const { currentQueryParams } = p.meta;
+      const queryToIssueIds = state.queryToIssueIds || {};
+      queryToIssueIds[currentQueryParams] = newIssues.map(i => i.id);
+      // INFO: Cache issues payload ends.
+
+      const selectedIssueId = p.issue && p.issue.id;
+
+      if (selectedIssueId != null) {
+        const foundIssueIndex = issues.findIndex(i => i.id === selectedIssueId);
         if (foundIssueIndex !== -1) {
           Object.assign(issues[foundIssueIndex], p.issue);
         }
       }
 
       return {
+        ...state,
         issues,
-        selectedIssueId: seelectedIssueId,
+        queryToIssueIds,
+        selectedIssueId,
         totalPages: p.issuesList.pages,
         isLoaded: true,
-        currentQueryParams: p.meta.currentQueryParams,
+        currentQueryParams,
       };
     }
     case ISSUE_SELECTED: {
@@ -55,14 +86,6 @@ function issuesReducer(state = {}, action) {
         selectedIssueId: p.id,
       };
     }
-    // TODO: [react-redux] handle it somehow.
-    // Currently, if user decides to come back (by arrow back browser button),
-    // he will see a newly created issue, even it's not in the right order,
-    // e.g. it should be on 10th page, but it shows on the last opened IssueList page.
-    // This may be a good article to read, but needs RTK (Redux tool kit knowledge):
-    //   https://redux-toolkit.js.org/rtk-query/usage/cache-behavior#default-cache-behavior
-    // such as:
-    //   https://redux.js.org/tutorials/essentials/part-1-overview-concepts
     case ISSUE_CREATED: {
       const newIssues = state.issues.concat([p]);
       return {

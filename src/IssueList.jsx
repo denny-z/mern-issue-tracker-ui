@@ -9,6 +9,7 @@ import PagintationWithSections from './PaginationWithSections.jsx';
 import {
   issueClose, issueDelete, issueRestore, loadIssuePreview, loadIssues,
 } from './redux/actions.js';
+import { getCurrentPageIssues } from './redux/selectors.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
@@ -107,6 +108,9 @@ class IssueList extends React.Component {
 
   render() {
     const { issues, isLoaded } = this.props;
+    // TODO: [ui-features] fix flicking while issues are loading.
+    // Show spinner on top of current table with issues.
+    // TODO: [ui-features] fix jumping of pages when no there are no or <10 issues loaded.
     if (!isLoaded) return null;
 
     const { location: { search } } = this.props;
@@ -132,10 +136,10 @@ class IssueList extends React.Component {
   }
 }
 
-const mapStateToProps = ({ issuesList }) => ({
-  totalPages: issuesList.totalPages,
-  issues: issuesList.issues,
-  isLoaded: issuesList.isLoaded,
+const mapStateToProps = state => ({
+  issues: getCurrentPageIssues(state),
+  totalPages: state.issuesList.totalPages,
+  isLoaded: state.issuesList.isLoaded,
 });
 const Connected = connect(mapStateToProps, null)(IssueList);
 const WithToast = withToast(Connected);
