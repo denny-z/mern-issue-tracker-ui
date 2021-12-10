@@ -1,6 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 
 import {
+  issueLoadQueryBuilder,
   ISSUE_CLOSE_QUERY,
   ISSUE_CREATE_QUERY,
   ISSUE_DELETE_QUERY,
@@ -8,22 +9,26 @@ import {
   ISSUE_PREVIEW_QUERY,
   ISSUE_REPORT_QUERY,
   ISSUE_RESTORE_QUERY,
+  ISSUE_UPDATE_QUERY,
 } from '../api/issue_queries.js';
+import { ISSUE_FIELDS } from '../constants.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
-import { getSelectedIssue } from './selectors.js';
+import { getIssue, getSelectedIssue } from './selectors.js';
 import {
   STATS_CLEAR,
   STATS_LOADED,
   ISSUES_LIST_LOADED,
   ISSUES_LIST_LOADING,
+  ISSUES_LIST_CACHE_HIT,
   ISSUE_LOADED,
   ISSUE_UPDATED,
   ISSUE_DELETED,
   ISSUE_RESTORED,
   ISSUE_SELECTED,
   ISSUE_CREATED,
-  ISSUES_LIST_CACHE_HIT,
+  ISSUE_LOADING,
+  ISSUE_CACHE_HIT,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -97,14 +102,15 @@ export function loadIssues(match, search, showError) {
   };
 }
 
+// TODO: [react-redux] [issue-loading] Introduce action to indicate that single issue is loading.
 export function loadIssuePreview(id, showError) {
   return async (dispatch, getState) => {
     const vars = { id };
     dispatch({
       type: ISSUE_SELECTED,
-      payload: { id },
+      payload: vars,
     });
-    // INFO: This is not cache field loaded by preview.
+    // INFO: This is a cache field loaded by preview.
     const selectedIssue = getSelectedIssue(getState());
     if (selectedIssue && 'description' in selectedIssue) return;
 
@@ -114,6 +120,49 @@ export function loadIssuePreview(id, showError) {
       type: ISSUE_LOADED,
       payload: data,
     });
+  };
+}
+
+// TODO: [react-redux] [issue-loading] Introduce action to indicate that single issue is loading.
+export function loadIssue(id, showError, onSuccess = (() => {})) {
+  return async (dispatch, getState) => {
+    dispatch({ type: ISSUE_LOADING });
+
+    const issue = getIssue(getState(), id);
+
+    let fieldsToLoad;
+    if (issue) {
+      fieldsToLoad = ISSUE_FIELDS.filter(fieldName => fieldName === 'id' || !(fieldName in issue));
+    } else {
+      fieldsToLoad = ISSUE_FIELDS;
+    }
+
+    if (fieldsToLoad.length === 1 && fieldsToLoad[0] === 'id') {
+      dispatch({ type: ISSUE_CACHE_HIT });
+      onSuccess();
+      return;
+    }
+    const query = issueLoadQueryBuilder(fieldsToLoad);
+    const data = await graphQLFetch(query, { id }, showError);
+
+    dispatch({
+      type: ISSUE_LOADED,
+      payload: data,
+    });
+    onSuccess();
+  };
+}
+
+export function updateIssue(issue, showError, onSuccess) {
+  return async (dispatch) => {
+    const { id, created, ...changes } = issue;
+    const data = await graphQLFetch(ISSUE_UPDATE_QUERY, { id, changes }, showError);
+
+    dispatch({
+      type: ISSUE_UPDATED,
+      payload: data,
+    });
+    onSuccess();
   };
 }
 

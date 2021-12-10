@@ -11,6 +11,8 @@ import {
   STATS_LOADED,
   ISSUE_CREATED,
   ISSUES_LIST_CACHE_HIT,
+  ISSUE_LOADING,
+  ISSUE_CACHE_HIT,
 } from './types.js';
 
 function statsReducer(state = {}, action) {
@@ -23,7 +25,12 @@ function statsReducer(state = {}, action) {
   }
 }
 
-function issuesReducer(state = {}, action) {
+const issuesInitialState = {
+  queryToIssueIds: {},
+  issues: [],
+};
+
+function issuesReducer(state = issuesInitialState, action) {
   const p = action.payload;
 
   switch (action.type) {
@@ -38,6 +45,7 @@ function issuesReducer(state = {}, action) {
         isLoaded: true,
         currentQueryParams: p.meta.currentQueryParams,
       };
+    // TODO [react-redux]: Fix totalPages and pages size does not change on ISSUE_DELETE.
     case ISSUES_LIST_LOADED: {
       // INFO: Cache issues payload starts.
       const newIssues = p.issuesList.issues;
@@ -93,18 +101,33 @@ function issuesReducer(state = {}, action) {
         issues: newIssues,
       };
     }
-    // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
+    case ISSUE_LOADING: {
+      return {
+        ...state,
+        isLoading: true,
+      };
+    }
+    case ISSUE_CACHE_HIT: {
+      return {
+        ...state,
+        isLoading: false,
+      };
+    }
     case ISSUE_LOADED: {
       const newIssues = [...state.issues];
-      const issuePreview = p.issue;
-      const issueIndex = newIssues.findIndex(issue => issue.id === issuePreview.id);
+      const loadedIssue = p.issue;
+      const issueIndex = newIssues.findIndex(issue => issue.id === loadedIssue.id);
       if (issueIndex !== -1) {
-        Object.assign(newIssues[issueIndex], issuePreview);
+        Object.assign(newIssues[issueIndex], loadedIssue);
+        newIssues[issueIndex] = { ...newIssues[issueIndex] };
+      } else {
+        newIssues.push(loadedIssue);
       }
 
       return {
         ...state,
         issues: newIssues,
+        isLoading: false,
       };
     }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.

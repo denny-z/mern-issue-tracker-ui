@@ -5,38 +5,26 @@ import {
   Button, ButtonToolbar, Col, ControlLabel, Form, FormControl, FormGroup, Panel,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import graphQLFetch from './graphQLFetch.js';
+import { connect } from 'react-redux';
 import NumInput from './NumInput.jsx';
 import DateInput from './DateInput.jsx';
 import TextInput from './TextInput.jsx';
-import store from './store.js';
 import withToast from './withToast.jsx';
 import UserContext from './UserContext.jsx';
+import {
+  loadIssue as loadIssueAction,
+  updateIssue as updateIssueAction,
+} from './redux/actions.js';
+import { getIssue } from './redux/selectors.js';
 
 class IssueEdit extends React.Component {
   static async fetchData(match, search, showError) {
     const { params: { id } } = match;
-    const query = `
-      query IssueForEdit($id: Int!) {
-        issue(id: $id) {
-          id
-          title
-          description
-          status
-          owner
-          created
-          due
-          effort
-        }
-      }
-    `;
-
-    const data = await graphQLFetch(query, { id }, showError);
-    return data;
+    return loadIssueAction(id, showError);
   }
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
     this.onValidityChange = this.onValidityChange.bind(this);
@@ -44,25 +32,37 @@ class IssueEdit extends React.Component {
     this.showValidation = this.showValidation.bind(this);
     this.hideValidation = this.hideValidation.bind(this);
 
-    const issue = store.initialData ? store.initialData.issue : null;
-    delete store.initialData;
+    this.showSuccessMessage = this.showSuccessMessage.bind(this);
+    this.updateIssueInState = this.updateIssueInState.bind(this);
+
     this.state = {
-      issue,
+      issue: {},
       invalidFields: {},
       needShowValidation: false,
     };
   }
 
   componentDidMount() {
-    const { issue } = this.state;
-    if (issue == null) this.loadData();
+    this.loadData();
   }
 
   componentDidUpdate(prevProps) {
-    const { match: { params: { id: prevId } } } = prevProps;
-    const { match: { params: { id } } } = this.props;
+    const {
+      match: { params: { id: prevId } },
+      initialIssue: prevInitialIssue,
+    } = prevProps;
+    const {
+      match: { params: { id } },
+      initialIssue,
+    } = this.props;
+
     if (id !== prevId) {
       this.loadData();
+      return;
+    }
+
+    if (prevInitialIssue !== initialIssue) {
+      this.updateIssueInState();
     }
   }
 
@@ -84,10 +84,31 @@ class IssueEdit extends React.Component {
     }));
   }
 
+  updateIssueInState() {
+    this.setState((prevState) => {
+      const { initialIssue } = this.props;
+
+      return {
+        ...prevState,
+        issue: Object.assign({}, initialIssue),
+      };
+    });
+  }
+
   async loadData() {
-    const { match, showError } = this.props;
-    const data = await IssueEdit.fetchData(match, null, showError);
-    this.setState({ issue: data ? data.issue : {}, invalidFields: {} });
+    const {
+      match: { params: { id: paramsId } },
+      showError,
+      loadIssue,
+    } = this.props;
+    const id = parseInt(paramsId, 10);
+
+    loadIssue(id, showError, this.updateIssueInState);
+  }
+
+  showSuccessMessage() {
+    const { showSuccess } = this.props;
+    showSuccess('Updated issue successfully.');
   }
 
   async handleSubmit(event) {
@@ -96,29 +117,9 @@ class IssueEdit extends React.Component {
     const { issue, invalidFields } = this.state;
     if (Object.keys(invalidFields).length !== 0) return;
 
-    const query = `
-      mutation UpdateIssue($id: Int!, $changes: IssueUpdateInputs!) {
-        updateIssue(id: $id, changes: $changes) {
-          id
-          title
-          status
-          owner
-          effort
-          created
-          due
-          description
-        }
-      }
-    `;
+    const { showError, updateIssue } = this.props;
 
-    const { id, created, ...changes } = issue;
-    const { showError, showSuccess } = this.props;
-
-    const data = await graphQLFetch(query, { id, changes }, showError);
-    if (data) {
-      this.setState({ issue: data.updateIssue });
-      showSuccess('Updated issue successfully.');
-    }
+    updateIssue(issue, showError, this.showSuccessMessage);
   }
 
   showValidation() {
@@ -296,6 +297,26 @@ class IssueEdit extends React.Component {
 }
 
 IssueEdit.contextType = UserContext;
-const IssueEditWithToast = withToast(IssueEdit);
-IssueEditWithToast.fetchData = IssueEdit.fetchData;
-export default IssueEditWithToast;
+
+
+const mapStateToProps = (state, ownProps) => {
+  const { match: { params: { id: paramsId } } } = ownProps;
+  const id = parseInt(paramsId, 10);
+
+  return {
+    initialIssue: getIssue(state, id),
+  };
+};
+
+const mapDispatchToProps = dispatch => ({
+  loadIssue: (id, showError, onSuccess) => {
+    dispatch(loadIssueAction(id, showError, onSuccess));
+  },
+  updateIssue: (issue, showError, onSuccess) => {
+    dispatch(updateIssueAction(issue, showError, onSuccess));
+  },
+});
+
+const Connected = connect(mapStateToProps, mapDispatchToProps)(IssueEdit);
+Connected.fetchData = IssueEdit.fetchData;
+export default withToast(Connected);

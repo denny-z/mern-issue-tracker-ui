@@ -2,7 +2,7 @@
 
 // INFO: This is an experimental technique to extract queries from the places where they called.
 
-import { ISSUE_STATUS_LIST } from '../constants.js';
+import { ISSUE_FIELDS, ISSUE_STATUS_LIST } from '../constants.js';
 
 export const ISSUE_REPORT_QUERY = `
   query IssueReport(
@@ -54,25 +54,32 @@ export const ISSUE_LIST_QUERY = `
   }
 `;
 
-export const ISSUE_PREVIEW_QUERY = `
-  query SelectedIssue($id: Int!) {
+export const issueLoadQueryBuilder = (fieldsToLoad = ['id'], queryName = 'IssueLoad') => (
+  `
+  query ${queryName}($id: Int!) {
     issue(id: $id) {
-      id description
+      ${fieldsToLoad.join(' ')}
+    }
+  }
+`);
+
+export const ISSUE_PREVIEW_QUERY = issueLoadQueryBuilder(
+  ['id', 'description'],
+  'IssuePreview',
+);
+
+export const ISSUE_UPDATE_QUERY = `
+  mutation IssueUpdate($id: Int!, $changes: IssueUpdateInputs!) {
+    issueUpdate(id: $id, changes: $changes) {
+      ${ISSUE_FIELDS.join(' ')}
     }
   }
 `;
 
 export const ISSUE_CLOSE_QUERY = `
-  mutation CloseIssue($id: Int!) {
-    updateIssue(id: $id, changes: { status: Closed }) {
-      id
-      title
-      status
-      owner
-      effort
-      created
-      due
-      description
+  mutation IssueClose($id: Int!) {
+    issueUpdate(id: $id, changes: { status: Closed }) {
+      ${ISSUE_FIELDS.join(' ')}
     }
   }
 `;
