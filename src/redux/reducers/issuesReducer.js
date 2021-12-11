@@ -15,6 +15,7 @@ import {
 const issuesInitialState = {
   queryToIssueIds: {},
   all: [],
+  loadingIds: {},
 };
 
 export default function issuesReducer(state = issuesInitialState, action) {
@@ -90,15 +91,21 @@ export default function issuesReducer(state = issuesInitialState, action) {
       };
     }
     case ISSUE_LOADING: {
+      const loadingIds = [...state.loadingIds];
+      loadingIds[p.id] = true;
+
       return {
         ...state,
-        isLoading: true,
+        loadingIds,
       };
     }
     case ISSUE_CACHE_HIT: {
+      const loadingIds = [...state.loadingIds];
+      loadingIds[p.id] = false;
+
       return {
         ...state,
-        isLoading: false,
+        loadingIds,
       };
     }
     case ISSUE_LOADED: {
@@ -112,10 +119,13 @@ export default function issuesReducer(state = issuesInitialState, action) {
         newIssues.push(loadedIssue);
       }
 
+      const loadingIds = [...state.loadingIds];
+      loadingIds[loadedIssue.id] = false;
+
       return {
         ...state,
         all: newIssues,
-        isLoading: false,
+        loadingIds,
       };
     }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.all.

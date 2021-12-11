@@ -106,10 +106,9 @@ export function loadIssues(match, search, showError) {
 export function loadIssuePreview(id, showError) {
   return async (dispatch, getState) => {
     const vars = { id };
-    dispatch({
-      type: ISSUE_SELECTED,
-      payload: vars,
-    });
+    dispatch({ type: ISSUE_SELECTED, payload: vars });
+    dispatch({ type: ISSUE_LOADING, payload: vars });
+
     // INFO: This is a cache field loaded by preview.
     const selectedIssue = getSelectedIssue(getState());
     if (selectedIssue && 'description' in selectedIssue) return;
@@ -126,7 +125,7 @@ export function loadIssuePreview(id, showError) {
 // TODO: [react-redux] [issue-loading] Introduce action to indicate that single issue is loading.
 export function loadIssue(id, showError, onSuccess = (() => {})) {
   return async (dispatch, getState) => {
-    dispatch({ type: ISSUE_LOADING });
+    dispatch({ type: ISSUE_LOADING, payload: { id } });
 
     const issue = getIssue(getState(), id);
 
@@ -138,7 +137,7 @@ export function loadIssue(id, showError, onSuccess = (() => {})) {
     }
 
     if (fieldsToLoad.length === 1 && fieldsToLoad[0] === 'id') {
-      dispatch({ type: ISSUE_CACHE_HIT });
+      dispatch({ type: ISSUE_CACHE_HIT, payload: { id } });
       onSuccess();
       return;
     }
@@ -156,6 +155,8 @@ export function loadIssue(id, showError, onSuccess = (() => {})) {
 export function updateIssue(issue, showError, onSuccess) {
   return async (dispatch) => {
     const { id, created, ...changes } = issue;
+    dispatch({ type: ISSUE_LOADING, payload: { id } });
+
     const data = await graphQLFetch(ISSUE_UPDATE_QUERY, { id, changes }, showError);
 
     dispatch({
@@ -171,6 +172,8 @@ export function updateIssue(issue, showError, onSuccess) {
 export function issueClose(id, showError) {
   return async (dispatch) => {
     const vars = { id };
+    dispatch({ type: ISSUE_LOADING, payload: vars });
+
     const data = await graphQLFetch(ISSUE_CLOSE_QUERY, vars, showError);
 
     dispatch({
