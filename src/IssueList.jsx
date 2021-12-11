@@ -108,10 +108,15 @@ class IssueList extends React.Component {
 
   render() {
     const { issues, isLoaded } = this.props;
+
     // TODO: [ui-features] fix flicking while issues are loading.
     // Show spinner on top of current table with issues.
     // TODO: [ui-features] fix jumping of pages when no there are no or <10 issues loaded.
-    if (!isLoaded) return null;
+    if (!isLoaded) {
+      return (
+        <h2 className="text-center">Loading...</h2>
+      );
+    }
 
     const { location: { search } } = this.props;
     const hasFilter = search !== '';
