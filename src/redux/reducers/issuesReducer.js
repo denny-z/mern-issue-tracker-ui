@@ -149,15 +149,29 @@ export default function issuesReducer(state = issuesInitialState, action) {
     case ISSUE_DELETED: {
       const newIssues = state.all.filter(issue => issue.id !== p.id);
 
-      let selectedId = state.selectedIssueId;
+      let { selectedIssueId } = state;
       if (state.selectedIssueId === p.id) {
-        selectedId = null;
+        selectedIssueId = null;
       }
+
+      const loadingIds = { ...state.loadingIds };
+      delete loadingIds[p.id];
+
+      const queryToIssueIds = { ...state.queryToIssueIds };
+      Object.entries(queryToIssueIds).forEach(([key, ids]) => {
+        const index = ids.indexOf(p.id);
+        if (index !== -1) {
+          ids.splice(index, 1);
+          queryToIssueIds[key] = [...ids];
+        }
+      });
 
       return {
         ...state,
         all: newIssues,
-        selectedIssueId: selectedId,
+        selectedIssueId,
+        loadingIds,
+        queryToIssueIds,
       };
     }
     default: return state;
