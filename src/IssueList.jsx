@@ -138,8 +138,8 @@ class IssueList extends React.Component {
 
 const mapStateToProps = state => ({
   issues: getCurrentPageIssues(state),
-  totalPages: state.issuesList.totalPages,
-  isLoaded: state.issuesList.isLoaded,
+  totalPages: state.issues.totalPages,
+  isLoaded: state.issues.isLoaded,
 });
 const Connected = connect(mapStateToProps, null)(IssueList);
 const WithToast = withToast(Connected);

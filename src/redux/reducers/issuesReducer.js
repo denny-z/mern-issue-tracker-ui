@@ -14,7 +14,7 @@ import {
 
 const issuesInitialState = {
   queryToIssueIds: {},
-  issues: [],
+  all: [],
 };
 
 export default function issuesReducer(state = issuesInitialState, action) {
@@ -35,39 +35,39 @@ export default function issuesReducer(state = issuesInitialState, action) {
     // TODO [react-redux]: Fix totalPages and pages size does not change on ISSUE_DELETE.
     case ISSUES_LIST_LOADED: {
       // INFO: Cache issues payload starts.
-      const newIssues = p.issuesList.issues;
-      let issues;
-      if (state.issues && state.issues.length) {
-        issues = [...state.issues];
-        newIssues.forEach((newIssue) => {
-          const index = issues.findIndex(issue => issue.id === newIssue.id);
+      const payloadIssues = p.issuesList.issues;
+      let newIssues;
+      if (state.all && state.all.length) {
+        newIssues = [...state.all];
+        payloadIssues.forEach((newIssue) => {
+          const index = newIssues.findIndex(issue => issue.id === newIssue.id);
           if (index !== -1) {
-            Object.assign(issues[index], newIssue);
+            Object.assign(newIssues[index], newIssue);
           } else {
-            issues.push(newIssue);
+            newIssues.push(newIssue);
           }
         });
       } else {
-        issues = newIssues;
+        newIssues = payloadIssues;
       }
 
       const { currentQueryParams } = p.meta;
       const queryToIssueIds = state.queryToIssueIds || {};
-      queryToIssueIds[currentQueryParams] = newIssues.map(i => i.id);
+      queryToIssueIds[currentQueryParams] = payloadIssues.map(i => i.id);
       // INFO: Cache issues payload ends.
 
       const selectedIssueId = p.issue && p.issue.id;
 
       if (selectedIssueId != null) {
-        const foundIssueIndex = issues.findIndex(i => i.id === selectedIssueId);
+        const foundIssueIndex = newIssues.findIndex(i => i.id === selectedIssueId);
         if (foundIssueIndex !== -1) {
-          Object.assign(issues[foundIssueIndex], p.issue);
+          Object.assign(newIssues[foundIssueIndex], p.issue);
         }
       }
 
       return {
         ...state,
-        issues,
+        all: newIssues,
         queryToIssueIds,
         selectedIssueId,
         totalPages: p.issuesList.pages,
@@ -81,11 +81,12 @@ export default function issuesReducer(state = issuesInitialState, action) {
         selectedIssueId: p.id,
       };
     }
+    case ISSUE_RESTORED:
     case ISSUE_CREATED: {
-      const newIssues = state.issues.concat([p]);
+      const newIssues = state.all.concat([p]);
       return {
         ...state,
-        issues: newIssues,
+        all: newIssues,
       };
     }
     case ISSUE_LOADING: {
@@ -101,7 +102,7 @@ export default function issuesReducer(state = issuesInitialState, action) {
       };
     }
     case ISSUE_LOADED: {
-      const newIssues = [...state.issues];
+      const newIssues = [...state.all];
       const loadedIssue = p.issue;
       const issueIndex = newIssues.findIndex(issue => issue.id === loadedIssue.id);
       if (issueIndex !== -1) {
@@ -113,26 +114,26 @@ export default function issuesReducer(state = issuesInitialState, action) {
 
       return {
         ...state,
-        issues: newIssues,
+        all: newIssues,
         isLoading: false,
       };
     }
-    // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
+    // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
     case ISSUE_UPDATED: {
-      const newIssues = [...state.issues];
+      const newIssues = [...state.all];
       const newIssue = p.issueUpdate;
       const issueIndex = newIssues.findIndex(issue => issue.id === newIssue.id);
       newIssues.splice(issueIndex, 1, newIssue);
 
       return {
         ...state,
-        issues: newIssues,
+        all: newIssues,
       };
     }
-    // TODO: [react-redux] fix it. Handle when issue is not found in state.issues.
-    // IDEA: [react-redux] Trigger page reload when the last issue in state.issues deleted.
+    // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
+    // IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
     case ISSUE_DELETED: {
-      const newIssues = state.issues.filter(issue => issue.id !== p.id);
+      const newIssues = state.all.filter(issue => issue.id !== p.id);
 
       let selectedId = state.selectedIssueId;
       if (state.selectedIssueId === p.id) {
@@ -141,15 +142,8 @@ export default function issuesReducer(state = issuesInitialState, action) {
 
       return {
         ...state,
-        issues: newIssues,
+        all: newIssues,
         selectedIssueId: selectedId,
-      };
-    }
-    case ISSUE_RESTORED: {
-      const newIssues = state.issues.concat([p.issueRestore]);
-      return {
-        ...state,
-        issues: newIssues,
       };
     }
     default: return state;

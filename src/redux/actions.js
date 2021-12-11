@@ -71,7 +71,7 @@ export function loadIssues(match, search, showError) {
     if (Number.isNaN(page)) page = 1;
     vars.page = page;
 
-    const { queryToIssueIds } = getState().issuesList;
+    const { queryToIssueIds } = getState().issues;
     const currentQueryParams = identifyQueryParams(match, search);
 
     dispatch({ type: ISSUES_LIST_LOADING });

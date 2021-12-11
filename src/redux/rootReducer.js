@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux';
-import issuesReducer from './reducers/issue.js';
-import statsReducer from './reducers/stats.js';
+import issuesReducer from './reducers/issuesReducer.js';
+import statsReducer from './reducers/statsReducer.js';
 
 export default combineReducers({
   issueCounts: statsReducer,
-  issuesList: issuesReducer,
+  issues: issuesReducer,
 });
