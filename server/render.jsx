@@ -7,7 +7,7 @@ import Page from '../src/Page.jsx';
 import template from './template.js';
 
 import simpleStore from '../src/store.js';
-import { store, initStore } from '../src/redux/store.js';
+import store from '../src/redux/store.js';
 import routes from '../src/routes.js';
 
 async function render(req, res) {
@@ -15,8 +15,6 @@ async function render(req, res) {
     route => matchPath(req.path, route),
   );
   const { cookie } = req.headers;
-
-  initStore();
 
   let initialData;
   if (activeRoute && activeRoute.component.fetchData) {
