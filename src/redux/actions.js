@@ -209,6 +209,12 @@ export function issueDelete(id, showError, onSuccess) {
   };
 }
 
+// TODO: [react-redux] fix issue does not appear.
+// Steps:
+// 1. Delete issue.
+// 2. Restore issue from Toast by clicking "Undo".
+// Actual result: Issue does not appear in issues list.
+// Expected result: Issue will appear (at least at the bottom of current list).
 export function issueRestore(id, showError, showSuccessWithMessage) {
   return async (dispatch) => {
     const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);
