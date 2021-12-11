@@ -5,7 +5,9 @@ import {
 } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
+import { connect } from 'react-redux';
 import UserContext from './UserContext.jsx';
+import { getIssue, getIssueLoading } from './redux/selectors.js';
 
 class IssueRowPlain extends React.Component {
   render() {
@@ -89,6 +91,14 @@ class IssueRowPlain extends React.Component {
 }
 
 IssueRowPlain.contextType = UserContext;
-const IssueRow = withRouter(IssueRowPlain);
+
+// TODO: [react-redux] [move-methods] Move issue actions from IssueList to IssueRow.
+const mapStateToProps = (state, { issueId: id }) => ({
+  issue: getIssue(state, id),
+  isLoading: getIssueLoading(state, id),
+});
+const Connected = connect(mapStateToProps)(IssueRowPlain);
+
+const IssueRow = withRouter(Connected);
 delete IssueRow.contextType;
 export default IssueRow;

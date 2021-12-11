@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pagination } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import { LinkContainer } from 'react-router-bootstrap';
 import URLSearchParams from 'url-search-params';
 
@@ -20,7 +21,7 @@ function PageLink({
   );
 }
 
-export default function PagintationWithSections({ search, totalPages }) {
+function PagintationWithSections({ search, totalPages }) {
   const params = new URLSearchParams(search);
   let activePage = parseInt(params.get('page'), 10);
   if (Number.isNaN(activePage)) activePage = 1;
@@ -54,3 +55,9 @@ export default function PagintationWithSections({ search, totalPages }) {
     </>
   );
 }
+
+const mapStateToProps = state => ({
+  totalPages: state.issues.totalPages,
+});
+
+export default connect(mapStateToProps)(PagintationWithSections);

@@ -9,7 +9,6 @@ import PagintationWithSections from './PaginationWithSections.jsx';
 import {
   issueClose, issueDelete, issueRestore, loadIssuePreview, loadIssues,
 } from './redux/actions.js';
-import { getCurrentPageIssues } from './redux/selectors.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
@@ -107,7 +106,7 @@ class IssueList extends React.Component {
   }
 
   render() {
-    const { issues, isLoaded } = this.props;
+    const { isLoaded } = this.props;
 
     // TODO: [ui-features] fix flicking while issues are loading.
     // Show spinner on top of current table with issues.
@@ -121,8 +120,6 @@ class IssueList extends React.Component {
     const { location: { search } } = this.props;
     const hasFilter = search !== '';
 
-    const { totalPages } = this.props;
-
     return (
       <React.Fragment>
         <Panel defaultExpanded={hasFilter}>
@@ -133,17 +130,16 @@ class IssueList extends React.Component {
             <IssueFilter urlBase="/issues" />
           </Panel.Body>
         </Panel>
-        <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
+        {/* TODO: [react-redux] [move-methods] Move issue actions from IssueList to IssueRow. */}
+        <IssueTable closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
         <IssueDetail />
-        <PagintationWithSections search={search} totalPages={totalPages} />
+        <PagintationWithSections search={search} />
       </React.Fragment>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  issues: getCurrentPageIssues(state),
-  totalPages: state.issues.totalPages,
   isLoaded: state.issues.isLoaded,
 });
 const Connected = connect(mapStateToProps, null)(IssueList);

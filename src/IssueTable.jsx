@@ -2,21 +2,23 @@ import React from 'react';
 import {
   Table,
 } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import IssueRow from './IssueRow.jsx';
+import { getCurrentPageIssueIds } from './redux/selectors.js';
 
-export default function IssueTable(props) {
-  const { issues, closeIssue, deleteIssue } = props;
-  const issuesList = issues.map((
-    issue => (
+function IssueTable(props) {
+  const { issueIds, closeIssue, deleteIssue } = props;
+  const issuesList = issueIds.map((
+    issueId => (
       <IssueRow
-        key={issue.id}
-        issue={issue}
+        key={issueId}
+        issueId={issueId}
         closeIssue={closeIssue}
         deleteIssue={deleteIssue}
       />
     )));
 
-  if (issues.length === 0) {
+  if (issueIds.length === 0) {
     return (<h3>There are no issues for now ;)</h3>);
   }
 
@@ -40,3 +42,8 @@ export default function IssueTable(props) {
     </Table>
   );
 }
+
+const mapStateToProps = state => ({
+  issueIds: getCurrentPageIssueIds(state),
+});
+export default connect(mapStateToProps)(IssueTable);

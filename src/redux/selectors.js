@@ -9,10 +9,11 @@ export function getSelectedIssue(state) {
   return getIssue(state, id);
 }
 
-export function getCurrentPageIssues(state) {
+export function getIssueLoading(state, id) {
+  return state.issues.loadingIds[id];
+}
+
+export function getCurrentPageIssueIds(state) {
   const { issues } = state;
-  const issueIdsByCurrentParams = issues.queryToIssueIds[issues.currentQueryParams] || [];
-  return issueIdsByCurrentParams.map(
-    issueId => issues.all.find(issue => issue.id === issueId),
-  ).filter(Boolean); /* Remove blank, if not found, e.g. from ISSUE_DELETE */
+  return issues.queryToIssueIds[issues.currentQueryParams] || [];
 }
