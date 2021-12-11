@@ -6,7 +6,7 @@ export default function IssueDetail() {
   const issue = useSelector(getSelectedIssue);
   const isLoading = useSelector(getSelectedIssueLoading);
 
-  if (isLoading) return (<h3>Descrpition is loading...</h3>);
+  if (isLoading) return (<h3>Description is loading...</h3>);
   if (issue == null) return null;
 
   const { id, description } = issue;
