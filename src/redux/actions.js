@@ -195,12 +195,14 @@ export function issueClose(id, showError) {
 
 export function issueDelete(id, showError, onSuccess) {
   return async (dispatch) => {
-    const data = await graphQLFetch(ISSUE_DELETE_QUERY, { id }, showError);
+    const vars = { id };
+    dispatch({ type: ISSUE_LOADING, payload: vars });
+    const data = await graphQLFetch(ISSUE_DELETE_QUERY, vars, showError);
 
     if (data && data.deleteIssue) {
       dispatch({
         type: ISSUE_DELETED,
-        payload: { id },
+        payload: vars,
       });
       onSuccess();
     }
