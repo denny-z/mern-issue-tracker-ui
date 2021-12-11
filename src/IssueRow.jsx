@@ -16,6 +16,7 @@ class IssueRowPlain extends React.Component {
       location: { search },
       closeIssue,
       deleteIssue,
+      isLoading,
     } = this.props;
 
     const { user } = this.context;
@@ -41,6 +42,12 @@ class IssueRowPlain extends React.Component {
       deleteIssue(id);
     };
 
+    const isCloseDisabled = issue.status === 'Closed'
+      || !user.signedIn
+      || isLoading;
+
+    const isDeleteDisabled = !user.signedIn || isLoading;
+
     const tableRow = (
       <tr>
         <td>{issue.id}</td>
@@ -63,7 +70,7 @@ class IssueRowPlain extends React.Component {
               type="button"
               bsSize="xsmall"
               onClick={(e) => { onClose(e, issue.id); }}
-              disabled={issue.status === 'Closed' || !user.signedIn}
+              disabled={isCloseDisabled}
             >
               <Glyphicon glyph="remove" />
             </Button>
@@ -73,7 +80,7 @@ class IssueRowPlain extends React.Component {
               type="button"
               bsSize="xsmall"
               onClick={(e) => { onDelete(e, issue.id); }}
-              disabled={!user.signedIn}
+              disabled={isDeleteDisabled}
             >
               <Glyphicon glyph="trash" />
             </Button>

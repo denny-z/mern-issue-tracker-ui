@@ -14,7 +14,7 @@ import {
 import { ISSUE_FIELDS } from '../constants.js';
 import graphQLFetch from '../graphQLFetch.js';
 import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
-import { getIssue, getSelectedIssue } from './selectors.js';
+import { getIssue, getIssueLoading, getSelectedIssue } from './selectors.js';
 import {
   STATS_CLEAR,
   STATS_LOADED,
@@ -102,16 +102,26 @@ export function loadIssues(match, search, showError) {
   };
 }
 
-// TODO: [react-redux] [issue-loading] Introduce action to indicate that single issue is loading.
 export function loadIssuePreview(id, showError) {
   return async (dispatch, getState) => {
     const vars = { id };
     dispatch({ type: ISSUE_SELECTED, payload: vars });
-    dispatch({ type: ISSUE_LOADING, payload: vars });
+
+    if (getIssueLoading(getState(), id)) {
+      return;
+    }
+
+    const loadingTimeout = setTimeout(() => {
+      dispatch({ type: ISSUE_LOADING, payload: vars });
+    }, 600);
 
     // INFO: This is a cache field loaded by preview.
     const selectedIssue = getSelectedIssue(getState());
-    if (selectedIssue && 'description' in selectedIssue) return;
+    if (selectedIssue && 'description' in selectedIssue) {
+      dispatch({ type: ISSUE_CACHE_HIT, payload: vars });
+      clearTimeout(loadingTimeout);
+      return;
+    }
 
     const data = await graphQLFetch(ISSUE_PREVIEW_QUERY, vars, showError);
 
@@ -119,10 +129,10 @@ export function loadIssuePreview(id, showError) {
       type: ISSUE_LOADED,
       payload: data,
     });
+    clearTimeout(loadingTimeout);
   };
 }
 
-// TODO: [react-redux] [issue-loading] Introduce action to indicate that single issue is loading.
 export function loadIssue(id, showError, onSuccess = (() => {})) {
   return async (dispatch, getState) => {
     dispatch({ type: ISSUE_LOADING, payload: { id } });

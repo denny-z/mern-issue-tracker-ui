@@ -15,7 +15,7 @@ import {
   loadIssue as loadIssueAction,
   updateIssue as updateIssueAction,
 } from './redux/actions.js';
-import { getIssue } from './redux/selectors.js';
+import { getIssue, getIssueLoading } from './redux/selectors.js';
 
 class IssueEdit extends React.Component {
   static async fetchData(match, search, showError) {
@@ -132,6 +132,9 @@ class IssueEdit extends React.Component {
 
   render() {
     const { issue } = this.state;
+    const { isLoading } = this.props;
+
+    if (isLoading) return (<h3 className="text-center">Loading form for you...</h3>);
     if (issue == null) return null;
 
     const { issue: { id } } = this.state;
@@ -305,6 +308,7 @@ const mapStateToProps = (state, ownProps) => {
 
   return {
     initialIssue: getIssue(state, id),
+    isLoading: getIssueLoading(state, id),
   };
 };
 
