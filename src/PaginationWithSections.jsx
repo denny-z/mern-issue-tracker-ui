@@ -33,7 +33,6 @@ function PagintationWithSections({ search, totalPages }) {
 
   const pageLinks = [];
   for (let i = startPageInSection; i <= Math.min(totalPages, endPageInSection); i += 1) {
-    params.set('page', 1);
     pageLinks.push(
       <PageLink key={i} params={params} activePage={activePage} page={i}>
         <Pagination.Item>{i}</Pagination.Item>
