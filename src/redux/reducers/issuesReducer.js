@@ -1,41 +1,12 @@
 import {
-  ISSUES_LIST_LOADED,
-  ISSUES_LIST_LOADING,
-  ISSUE_DELETED,
-  ISSUE_SELECTED,
-  ISSUE_LOADED,
-  ISSUE_RESTORED,
-  ISSUE_UPDATED,
-  ISSUE_CREATED,
-  ISSUES_LIST_CACHE_HIT,
-  ISSUE_LOADING,
-  ISSUE_CACHE_HIT,
+  ISSUES_LIST_LOADED, ISSUE_CREATED, ISSUE_DELETED, ISSUE_LOADED, ISSUE_SELECTED, ISSUE_UPDATED,
 } from '../types.js';
 
-const issuesInitialState = {
-  queryToIssueIds: {},
-  all: [],
-  loadingIds: {},
-};
+const initialState = { all: [] };
 
-export default function issuesReducer(state = issuesInitialState, action) {
-  const p = action.payload;
-
-  switch (action.type) {
-    case ISSUES_LIST_LOADING:
-      return {
-        ...state,
-        isLoaded: false,
-      };
-    case ISSUES_LIST_CACHE_HIT:
-      return {
-        ...state,
-        isLoaded: true,
-        currentQueryParams: p.meta.currentQueryParams,
-      };
-    // TODO [react-redux]: Fix totalPages and pages size does not change on ISSUE_DELETE.
+export default function issuesReducer(state = initialState, { payload: p, type }) {
+  switch (type) {
     case ISSUES_LIST_LOADED: {
-      // INFO: Cache issues payload starts.
       const payloadIssues = p.issuesList.issues;
       let newIssues;
       if (state.all && state.all.length) {
@@ -52,13 +23,7 @@ export default function issuesReducer(state = issuesInitialState, action) {
         newIssues = payloadIssues;
       }
 
-      const { currentQueryParams } = p.meta;
-      const queryToIssueIds = state.queryToIssueIds || {};
-      queryToIssueIds[currentQueryParams] = payloadIssues.map(i => i.id);
-      // INFO: Cache issues payload ends.
-
       const selectedIssueId = p.issue && p.issue.id;
-
       if (selectedIssueId != null) {
         const foundIssueIndex = newIssues.findIndex(i => i.id === selectedIssueId);
         if (foundIssueIndex !== -1) {
@@ -69,43 +34,13 @@ export default function issuesReducer(state = issuesInitialState, action) {
       return {
         ...state,
         all: newIssues,
-        queryToIssueIds,
         selectedIssueId,
-        totalPages: p.issuesList.pages,
-        isLoaded: true,
-        currentQueryParams,
       };
     }
     case ISSUE_SELECTED: {
       return {
         ...state,
         selectedIssueId: p.id,
-      };
-    }
-    case ISSUE_RESTORED:
-    case ISSUE_CREATED: {
-      const newIssues = state.all.concat([p]);
-      return {
-        ...state,
-        all: newIssues,
-      };
-    }
-    case ISSUE_LOADING: {
-      const loadingIds = { ...state.loadingIds };
-      loadingIds[p.id] = true;
-
-      return {
-        ...state,
-        loadingIds,
-      };
-    }
-    case ISSUE_CACHE_HIT: {
-      const loadingIds = { ...state.loadingIds };
-      loadingIds[p.id] = false;
-
-      return {
-        ...state,
-        loadingIds,
       };
     }
     case ISSUE_LOADED: {
@@ -119,33 +54,30 @@ export default function issuesReducer(state = issuesInitialState, action) {
         newIssues.push(loadedIssue);
       }
 
-      const loadingIds = { ...state.loadingIds };
-      loadingIds[loadedIssue.id] = false;
-
       return {
         ...state,
         all: newIssues,
-        loadingIds,
+      };
+    }
+    case ISSUE_CREATED: {
+      const newIssues = state.all.concat([p]);
+      return {
+        ...state,
+        all: newIssues,
       };
     }
     // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
     case ISSUE_UPDATED: {
-      const newIssues = [...state.all];
       const newIssue = p.issueUpdate;
+      const newIssues = [...state.all];
       const issueIndex = newIssues.findIndex(issue => issue.id === newIssue.id);
       newIssues.splice(issueIndex, 1, newIssue);
-
-      const loadingIds = { ...state.loadingIds };
-      loadingIds[newIssue.id] = false;
 
       return {
         ...state,
         all: newIssues,
-        loadingIds,
       };
     }
-    // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
-    // IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
     case ISSUE_DELETED: {
       const newIssues = state.all.filter(issue => issue.id !== p.id);
 
@@ -154,24 +86,10 @@ export default function issuesReducer(state = issuesInitialState, action) {
         selectedIssueId = null;
       }
 
-      const loadingIds = { ...state.loadingIds };
-      delete loadingIds[p.id];
-
-      const queryToIssueIds = { ...state.queryToIssueIds };
-      Object.entries(queryToIssueIds).forEach(([key, ids]) => {
-        const index = ids.indexOf(p.id);
-        if (index !== -1) {
-          ids.splice(index, 1);
-          queryToIssueIds[key] = [...ids];
-        }
-      });
-
       return {
         ...state,
         all: newIssues,
         selectedIssueId,
-        loadingIds,
-        queryToIssueIds,
       };
     }
     default: return state;

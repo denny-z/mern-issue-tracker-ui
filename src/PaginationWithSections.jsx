@@ -3,6 +3,7 @@ import { Pagination } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { LinkContainer } from 'react-router-bootstrap';
 import URLSearchParams from 'url-search-params';
+import { getIssuesPagesCount } from './redux/selectors.js';
 
 const SECTION_SIZE = 5;
 
@@ -56,7 +57,7 @@ function PagintationWithSections({ search, totalPages }) {
 }
 
 const mapStateToProps = state => ({
-  totalPages: state.issues.totalPages,
+  totalPages: getIssuesPagesCount(state),
 });
 
 export default connect(mapStateToProps)(PagintationWithSections);

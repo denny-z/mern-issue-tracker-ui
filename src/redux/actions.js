@@ -1,5 +1,3 @@
-/* eslint-disable import/prefer-default-export */
-
 import {
   issueLoadQueryBuilder,
   ISSUE_CLOSE_QUERY,
@@ -13,7 +11,11 @@ import {
 } from '../api/issue_queries.js';
 import { ISSUE_FIELDS } from '../constants.js';
 import graphQLFetch from '../graphQLFetch.js';
-import prepareIssueFilterVars from '../prepareIssueFilterVars.js';
+import {
+  generateParamsIdentity,
+  prepareIssueFilterVars,
+  prepareListVars,
+} from '../filterUtils.js';
 import { getIssue, getIssueLoading, getSelectedIssue } from './selectors.js';
 import {
   STATS_CLEAR,
@@ -29,6 +31,7 @@ import {
   ISSUE_CREATED,
   ISSUE_LOADING,
   ISSUE_CACHE_HIT,
+  ISSUES_LIST_CACHE_RESET,
 } from './types.js';
 
 // TODO: [react-redux] Implement global error handling instead of pass showError argument.
@@ -51,45 +54,10 @@ export function clearStats() {
   };
 }
 
-function identifyQueryParams(match, search) {
-  return JSON.stringify(match) + search;
-}
-
 export function loadIssues(match, search, showError) {
-  return async (dispatch, getState) => {
-    const params = new URLSearchParams(search);
-    const vars = { hasSelection: false, selectedId: 0 };
-    Object.assign(vars, prepareIssueFilterVars(params));
-
-    const { params: { id } } = match;
-    const idInt = parseInt(id, 10);
-    if (!Number.isNaN(idInt)) {
-      vars.hasSelection = true;
-      vars.selectedId = idInt;
-    }
-    let page = params.get('page', 10);
-    if (Number.isNaN(page)) page = 1;
-    vars.page = page;
-
-    const { queryToIssueIds } = getState().issues;
-    const currentQueryParams = identifyQueryParams(match, search);
-
-    dispatch({ type: ISSUES_LIST_LOADING });
-    // TODO: [react-redux] fix minor issue.
-    //   Steps:
-    //   1. Go to issues list and select some filers. You are on first page of results.
-    //   2. Click to Page 1. page=1 is added to URL.
-    //   Actual result: data is reloaded.
-    //   Expected result: data should be loaded from cache.
-    //   This may be realted to stringify nature of identifyQueryParams OR
-    //     remove page=1 from URL if first page selected.
-    if (queryToIssueIds[currentQueryParams]) {
-      dispatch({
-        type: ISSUES_LIST_CACHE_HIT,
-        payload: { meta: { currentQueryParams } },
-      });
-      return;
-    }
+  return async (dispatch) => {
+    const vars = prepareListVars(match, search);
+    const currentQueryParams = generateParamsIdentity(match, search);
 
     const data = await graphQLFetch(ISSUE_LIST_QUERY, vars, showError);
     dispatch({
@@ -99,6 +67,24 @@ export function loadIssues(match, search, showError) {
         { meta: { currentQueryParams } },
       ),
     });
+  };
+}
+
+export function initLoadIssues(match, search, showError) {
+  return (dispatch, getState) => {
+    const currentQueryParams = generateParamsIdentity(match, search);
+
+    const { queryToIssueIds } = getState().issuesUI;
+
+    dispatch({ type: ISSUES_LIST_LOADING });
+    if (queryToIssueIds[currentQueryParams]) {
+      dispatch({
+        type: ISSUES_LIST_CACHE_HIT,
+        payload: { meta: { currentQueryParams } },
+      });
+    }
+
+    dispatch(loadIssues(match, search, showError));
   };
 }
 
@@ -174,6 +160,9 @@ export function updateIssue(issue, showError, onSuccess) {
       payload: data,
     });
     onSuccess();
+
+    // eslint-disable-next-line max-len
+    // TODO: [react-redux] invalidate cache for pages with where issue is. [issues-reducer]
   };
 }
 
@@ -190,9 +179,15 @@ export function issueClose(id, showError) {
       type: ISSUE_UPDATED,
       payload: data,
     });
+
+    // eslint-disable-next-line max-len
+    // TODO: [react-redux] invalidate cache for pages with where issue is. [issues-reducer]
   };
 }
 
+// TODO: [react-redux] Fix totalPages and pages size does not change on ISSUE_DELETE.
+// TODO: [react-redux] fix it. Handle when issue is not found in state.all.
+// IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
 export function issueDelete(id, showError, onSuccess) {
   return async (dispatch) => {
     const vars = { id };
@@ -205,6 +200,13 @@ export function issueDelete(id, showError, onSuccess) {
         payload: vars,
       });
       onSuccess();
+
+      dispatch(loadIssues());
+
+      // TODO: [react-redux] invalidate cache for pages where issue were. [issues-reducer]
+      dispatch({
+        type: ISSUES_LIST_CACHE_RESET,
+      });
     }
   };
 }
@@ -215,7 +217,7 @@ export function issueDelete(id, showError, onSuccess) {
 // 2. Restore issue from Toast by clicking "Undo".
 // Actual result: Issue does not appear in issues list.
 // Expected result: Issue will appear (at least at the bottom of current list).
-export function issueRestore(id, showError, showSuccessWithMessage) {
+export function issueRestore(id, showError, onSuccess) {
   return async (dispatch) => {
     const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);
 
@@ -224,17 +226,13 @@ export function issueRestore(id, showError, showSuccessWithMessage) {
         type: ISSUE_RESTORED,
         payload: data,
       });
-      showSuccessWithMessage();
+      onSuccess();
+
+      // TODO: [react-redux] invalidate (all?) cache. [issues-reducer]
     }
   };
 }
 
-// TODO: [react-redux] fix that issue does not appear.
-// Steps:
-// 1. Go to last page of IssueList.
-// 2. Create issue (via + in nav bar).
-// Actual result: Issue does not appear in issues list.
-// Expected result: Issue will appear (at least at the bottom of current list).
 export function issueCreate(issue, showError, onSuccess) {
   return async (dispatch) => {
     const data = await graphQLFetch(ISSUE_CREATE_QUERY, { issue }, showError);
@@ -244,7 +242,10 @@ export function issueCreate(issue, showError, onSuccess) {
         type: ISSUE_CREATED,
         payload: data.addIssue,
       });
+
       onSuccess(data.addIssue);
+
+    // TODO: [react-redux] invalidate cache for last pages. [issues-reducer]
     }
   };
 }

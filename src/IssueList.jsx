@@ -7,12 +7,13 @@ import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import PagintationWithSections from './PaginationWithSections.jsx';
 import {
-  issueClose, issueDelete, issueRestore, loadIssuePreview, loadIssues,
+  issueClose, issueDelete, issueRestore, loadIssuePreview, initLoadIssues,
 } from './redux/actions.js';
+import { getIssueListLoading } from './redux/selectors.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
-    return loadIssues(match, search, showError);
+    return initLoadIssues(match, search, showError);
   }
 
   constructor() {
@@ -54,7 +55,7 @@ class IssueList extends React.Component {
       dispatch,
     } = this.props;
 
-    dispatch(loadIssues(match, search, showError));
+    dispatch(initLoadIssues(match, search, showError));
   }
 
   // INFO: This function should be used when only selected issue. It will help to reduce
@@ -106,12 +107,12 @@ class IssueList extends React.Component {
   }
 
   render() {
-    const { isLoaded } = this.props;
+    const { isLoading } = this.props;
 
     // TODO: [ui-features] fix flicking while issues are loading.
     // Show spinner on top of current table with issues.
     // TODO: [ui-features] fix jumping of pages when no there are no or <10 issues loaded.
-    if (!isLoaded) {
+    if (isLoading) {
       return (
         <h2 className="text-center">Loading...</h2>
       );
@@ -140,7 +141,7 @@ class IssueList extends React.Component {
 }
 
 const mapStateToProps = state => ({
-  isLoaded: state.issues.isLoaded,
+  isLoading: getIssueListLoading(state),
 });
 const Connected = connect(mapStateToProps, null)(IssueList);
 const WithToast = withToast(Connected);
