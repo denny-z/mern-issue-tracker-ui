@@ -65,6 +65,8 @@ function loadIssuesByVars(queryVars, currentCacheIdentity, showError) {
   };
 }
 
+// eslint-disable-next-line max-len
+// TODO [react-redux]: Fix console error when last issue deleted from page. See isCurrentIssuePageNeedsLoad.
 function clearCacheById(dispatch, getState, id, showError) {
   dispatch({
     type: ISSUES_LIST_CACHE_RESET,
@@ -89,15 +91,6 @@ export function initLoadIssues(match, search, showError) {
     const identityToIssueIds = getCacheIdentities(getState());
 
     if (identityToIssueIds[currentCacheIdentity]) {
-      // TODO: [react-redux] fix incorrect value of total pages on issues list page.
-      // Steps:
-      //  1. Filter list by status New. E.g. it shows 2 total pages.
-      //  2. Filter list by status Assigned. E.g. it shows 4 total pages.
-      //  3. Filter list by status New again.
-      // Actual result: it shows 4 total pages.
-      // Expected result: it shows 2 total pages.
-      // Suggested fix: introduce identityToPagesCount object or identityToListVars object,
-      //  update it on every ISSUES_LIST_LOADED, update getIssuesPagesCount accordingly.
       dispatch({
         type: ISSUES_LIST_CACHE_HIT,
         payload: { meta: { currentCacheIdentity, currentListVars: vars } },

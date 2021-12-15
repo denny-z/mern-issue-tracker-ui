@@ -14,6 +14,7 @@ import {
 
 const issuesInitialState = {
   identityToIssueIds: {},
+  identityToPages: {},
   loadingIds: {},
 };
 
@@ -33,17 +34,21 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
       };
     case ISSUES_LIST_LOADED: {
       const payloadIssues = p.issuesList.issues;
-      const { currentCacheIdentity } = p.meta;
-      const { identityToIssueIds } = state;
+      const { currentCacheIdentity, currentListVars } = p.meta;
+
+      const identityToIssueIds = { ...state.identityToIssueIds };
       identityToIssueIds[currentCacheIdentity] = payloadIssues.map(i => i.id);
+
+      const identityToPages = { ...state.identityToPages };
+      identityToPages[currentCacheIdentity] = p.issuesList.pages;
 
       return {
         ...state,
         identityToIssueIds,
-        totalPages: p.issuesList.pages,
         isLoading: false,
         currentCacheIdentity,
-        currentListVars: p.meta.currentListVars,
+        currentListVars,
+        identityToPages,
       };
     }
     case ISSUE_RESTORED:

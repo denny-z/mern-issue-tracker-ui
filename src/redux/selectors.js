@@ -37,7 +37,8 @@ export function getIssueListLoading(state) {
 }
 
 export function getIssuesPagesCount(state) {
-  return state.issuesUI.totalPages;
+  const { identityToPages, currentCacheIdentity } = state.issuesUI;
+  return identityToPages[currentCacheIdentity];
 }
 
 export function getCacheIdentities(state) {
