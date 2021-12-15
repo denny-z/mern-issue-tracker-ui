@@ -10,13 +10,11 @@ import {
   ISSUE_UPDATE_QUERY,
 } from '../api/issue_queries.js';
 import { ISSUE_FIELDS } from '../constants.js';
+import { generateCacheIdentity, prepareIssueFilterVars, prepareListVars } from '../filterUtils.js';
 import graphQLFetch from '../graphQLFetch.js';
 import {
-  generateParamsIdentity,
-  prepareIssueFilterVars,
-  prepareListVars,
-} from '../filterUtils.js';
-import { getIssue, getIssueLoading, getSelectedIssue } from './selectors.js';
+  getCacheIdentities, getIssue, getIssueLoading, getSelectedIssue, isCurrentIssuePageNeedsLoad,
+} from './selectors.js';
 import {
   STATS_CLEAR,
   STATS_LOADED,
@@ -54,37 +52,61 @@ export function clearStats() {
   };
 }
 
-export function loadIssues(match, search, showError) {
+function loadIssuesByVars(queryVars, currentCacheIdentity, showError) {
   return async (dispatch) => {
-    const vars = prepareListVars(match, search);
-    const currentQueryParams = generateParamsIdentity(match, search);
-
-    const data = await graphQLFetch(ISSUE_LIST_QUERY, vars, showError);
+    const data = await graphQLFetch(ISSUE_LIST_QUERY, queryVars, showError);
     dispatch({
       type: ISSUES_LIST_LOADED,
       payload: Object.assign(
         data,
-        { meta: { currentQueryParams } },
+        { meta: { currentCacheIdentity, currentListVars: queryVars } },
       ),
     });
   };
 }
 
+function clearCacheById(dispatch, getState, id, showError) {
+  dispatch({
+    type: ISSUES_LIST_CACHE_RESET,
+    payload: { id },
+  });
+
+  // INFO: This check for current page reload might help when Live Editing comes.
+  if (isCurrentIssuePageNeedsLoad(getState())) {
+    dispatch({ type: ISSUES_LIST_LOADING });
+
+    const { currentListVars, currentCacheIdentity } = getState().issuesUI;
+    dispatch(
+      loadIssuesByVars(currentListVars, currentCacheIdentity, showError),
+    );
+  }
+}
+
 export function initLoadIssues(match, search, showError) {
   return (dispatch, getState) => {
-    const currentQueryParams = generateParamsIdentity(match, search);
+    const vars = prepareListVars(match, search);
+    const currentCacheIdentity = generateCacheIdentity(match, search);
+    const identityToIssueIds = getCacheIdentities(getState());
 
-    const { queryToIssueIds } = getState().issuesUI;
-
-    dispatch({ type: ISSUES_LIST_LOADING });
-    if (queryToIssueIds[currentQueryParams]) {
+    if (identityToIssueIds[currentCacheIdentity]) {
+      // TODO: [react-redux] fix incorrect value of total pages on issues list page.
+      // Steps:
+      //  1. Filter list by status New. E.g. it shows 2 total pages.
+      //  2. Filter list by status Assigned. E.g. it shows 4 total pages.
+      //  3. Filter list by status New again.
+      // Actual result: it shows 4 total pages.
+      // Expected result: it shows 2 total pages.
+      // Suggested fix: introduce identityToPagesCount object or identityToListVars object,
+      //  update it on every ISSUES_LIST_LOADED, update getIssuesPagesCount accordingly.
       dispatch({
         type: ISSUES_LIST_CACHE_HIT,
-        payload: { meta: { currentQueryParams } },
+        payload: { meta: { currentCacheIdentity, currentListVars: vars } },
       });
+      return;
     }
 
-    dispatch(loadIssues(match, search, showError));
+    dispatch({ type: ISSUES_LIST_LOADING });
+    dispatch(loadIssuesByVars(vars, currentCacheIdentity, showError));
   };
 }
 
@@ -149,7 +171,7 @@ export function loadIssue(id, showError, onSuccess = (() => {})) {
 }
 
 export function updateIssue(issue, showError, onSuccess) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     const { id, created, ...changes } = issue;
     dispatch({ type: ISSUE_LOADING, payload: { id } });
 
@@ -162,14 +184,15 @@ export function updateIssue(issue, showError, onSuccess) {
     onSuccess();
 
     // eslint-disable-next-line max-len
-    // TODO: [react-redux] invalidate cache for pages with where issue is. [issues-reducer]
+    // TODO: [react-redux] invalidate cache for pages with filers only if fitler-related issue fields updated. [issues-reducer]
+    clearCacheById(dispatch, getState, id, showError);
   };
 }
 
 // TODO: [react-redux] fix it.
 // Handle error when issue by id is not found as it was implemented before redux add.
 export function issueClose(id, showError) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     const vars = { id };
     dispatch({ type: ISSUE_LOADING, payload: vars });
 
@@ -180,8 +203,8 @@ export function issueClose(id, showError) {
       payload: data,
     });
 
-    // eslint-disable-next-line max-len
-    // TODO: [react-redux] invalidate cache for pages with where issue is. [issues-reducer]
+    // TODO: [react-redux] invalidate cache for pages with filers only. [issues-reducer]
+    clearCacheById(dispatch, getState, id, showError);
   };
 }
 
@@ -189,7 +212,7 @@ export function issueClose(id, showError) {
 // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
 // IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
 export function issueDelete(id, showError, onSuccess) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     const vars = { id };
     dispatch({ type: ISSUE_LOADING, payload: vars });
     const data = await graphQLFetch(ISSUE_DELETE_QUERY, vars, showError);
@@ -201,12 +224,7 @@ export function issueDelete(id, showError, onSuccess) {
       });
       onSuccess();
 
-      dispatch(loadIssues());
-
-      // TODO: [react-redux] invalidate cache for pages where issue were. [issues-reducer]
-      dispatch({
-        type: ISSUES_LIST_CACHE_RESET,
-      });
+      clearCacheById(dispatch, getState, id, showError);
     }
   };
 }
@@ -228,7 +246,7 @@ export function issueRestore(id, showError, onSuccess) {
       });
       onSuccess();
 
-      // TODO: [react-redux] invalidate (all?) cache. [issues-reducer]
+      // TODO: [react-redux] invalidate (all?) page cache. [issues-reducer]
     }
   };
 }
@@ -245,7 +263,7 @@ export function issueCreate(issue, showError, onSuccess) {
 
       onSuccess(data.addIssue);
 
-    // TODO: [react-redux] invalidate cache for last pages. [issues-reducer]
+      // TODO: [react-redux] invalidate (all?) page cache. [issues-reducer]
     }
   };
 }

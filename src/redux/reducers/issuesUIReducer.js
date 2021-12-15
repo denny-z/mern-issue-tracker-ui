@@ -9,10 +9,11 @@ import {
   ISSUES_LIST_CACHE_HIT,
   ISSUE_LOADING,
   ISSUE_CACHE_HIT,
+  ISSUES_LIST_CACHE_RESET,
 } from '../types.js';
 
 const issuesInitialState = {
-  queryToIssueIds: {},
+  identityToIssueIds: {},
   loadingIds: {},
 };
 
@@ -27,20 +28,22 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
       return {
         ...state,
         isLoading: false,
-        currentQueryParams: p.meta.currentQueryParams,
+        currentCacheIdentity: p.meta.currentCacheIdentity,
+        currentListVars: p.meta.currentListVars,
       };
     case ISSUES_LIST_LOADED: {
       const payloadIssues = p.issuesList.issues;
-      const { currentQueryParams } = p.meta;
-      const queryToIssueIds = state.queryToIssueIds || {};
-      queryToIssueIds[currentQueryParams] = payloadIssues.map(i => i.id);
+      const { currentCacheIdentity } = p.meta;
+      const { identityToIssueIds } = state;
+      identityToIssueIds[currentCacheIdentity] = payloadIssues.map(i => i.id);
 
       return {
         ...state,
-        queryToIssueIds,
+        identityToIssueIds,
         totalPages: p.issuesList.pages,
         isLoading: false,
-        currentQueryParams,
+        currentCacheIdentity,
+        currentListVars: p.meta.currentListVars,
       };
     }
     case ISSUE_RESTORED:
@@ -90,19 +93,24 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
       const loadingIds = { ...state.loadingIds };
       delete loadingIds[p.id];
 
-      const queryToIssueIds = { ...state.queryToIssueIds };
-      Object.entries(queryToIssueIds).forEach(([key, ids]) => {
-        const index = ids.indexOf(p.id);
-        if (index !== -1) {
-          ids.splice(index, 1);
-          queryToIssueIds[key] = [...ids];
-        }
-      });
-
       return {
         ...state,
         loadingIds,
-        queryToIssueIds,
+      };
+    }
+    case ISSUES_LIST_CACHE_RESET: {
+      const identityToIssueIds = { ...state.identityToIssueIds };
+
+      const identities = Object.entries(state.identityToIssueIds)
+        .filter(([query, ids]) => ids.includes(p.id)) // eslint-disable-line no-unused-vars
+        .map(([query, ids]) => query); // eslint-disable-line no-unused-vars
+
+
+      identities.forEach((identity) => { identityToIssueIds[identity] = null; });
+
+      return {
+        ...state,
+        identityToIssueIds,
       };
     }
     default: return state;

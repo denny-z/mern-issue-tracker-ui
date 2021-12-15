@@ -30,7 +30,7 @@ export function prepareListVars(match, search) {
 }
 
 const OMMITED_IDENTITY_KEYS = ['hasSelection', 'selectedId'];
-export function generateParamsIdentity(match, search) {
+export function generateCacheIdentity(match, search) {
   const vars = prepareListVars(match, search);
   const keys = Object.keys(vars).filter(key => !OMMITED_IDENTITY_KEYS.includes(key)).sort();
   const identifyVars = {};
