@@ -179,7 +179,7 @@ export function updateIssue(issue, showError, onSuccess) {
     });
     onSuccess();
 
-    // IDEA: This side affects track can be a good exercise for saga (redux-saga).
+    // IDEA: These side affects tracking can be a good exercise for saga (redux-saga).
     const issueAfterUpdate = getIssue(getState(), id);
     const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
 
@@ -192,6 +192,7 @@ export function updateIssue(issue, showError, onSuccess) {
 export function issueClose(id, showError) {
   return async (dispatch, getState) => {
     const vars = { id };
+    const issueBeforeUpdate = getIssue(getState(), id);
     dispatch({ type: ISSUE_LOADING, payload: vars });
 
     const data = await graphQLFetch(ISSUE_CLOSE_QUERY, vars, showError);
@@ -201,8 +202,11 @@ export function issueClose(id, showError) {
       payload: data,
     });
 
-    // TODO: [react-redux] invalidate cache for pages with filers only. [issues-reducer]
-    clearIssuesCache(dispatch, getState, id, showError);
+    // IDEA: These side affects tracking can be a good exercise for saga (redux-saga).
+    const issueAfterUpdate = getIssue(getState(), id);
+    const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
+
+    clearIssuesCache(dispatch, getState, id, showError, changedKeys);
   };
 }
 
