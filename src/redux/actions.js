@@ -12,6 +12,7 @@ import {
 import { ISSUE_FIELDS } from '../constants.js';
 import { generateCacheIdentity, prepareIssueFilterVars, prepareListVars } from '../filterUtils.js';
 import graphQLFetch from '../graphQLFetch.js';
+import { getFieldsListDiff } from '../utils/objectUtils.js';
 import {
   getCacheIdentities, getIssue, getIssueLoading, getSelectedIssue, isCurrentIssuePageNeedsLoad,
 } from './selectors.js';
@@ -67,10 +68,10 @@ function loadIssuesByVars(queryVars, currentCacheIdentity, showError) {
 
 // eslint-disable-next-line max-len
 // TODO [react-redux]: Fix console error when last issue deleted from page. See isCurrentIssuePageNeedsLoad.
-function clearCacheById(dispatch, getState, id, showError) {
+function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
   dispatch({
     type: ISSUES_LIST_CACHE_RESET,
-    payload: { id },
+    payload: { id, changedKeys },
   });
 
   // INFO: This check for current page reload might help when Live Editing comes.
@@ -166,6 +167,8 @@ export function loadIssue(id, showError, onSuccess = (() => {})) {
 export function updateIssue(issue, showError, onSuccess) {
   return async (dispatch, getState) => {
     const { id, created, ...changes } = issue;
+    const issueBeforeUpdate = getIssue(getState(), id);
+
     dispatch({ type: ISSUE_LOADING, payload: { id } });
 
     const data = await graphQLFetch(ISSUE_UPDATE_QUERY, { id, changes }, showError);
@@ -176,9 +179,11 @@ export function updateIssue(issue, showError, onSuccess) {
     });
     onSuccess();
 
-    // eslint-disable-next-line max-len
-    // TODO: [react-redux] invalidate cache for pages with filers only if fitler-related issue fields updated. [issues-reducer]
-    clearCacheById(dispatch, getState, id, showError);
+    // IDEA: This side affects track can be a good exercise for saga (redux-saga).
+    const issueAfterUpdate = getIssue(getState(), id);
+    const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
+
+    clearIssuesCache(dispatch, getState, id, showError, changedKeys);
   };
 }
 
@@ -197,7 +202,7 @@ export function issueClose(id, showError) {
     });
 
     // TODO: [react-redux] invalidate cache for pages with filers only. [issues-reducer]
-    clearCacheById(dispatch, getState, id, showError);
+    clearIssuesCache(dispatch, getState, id, showError);
   };
 }
 
@@ -217,7 +222,7 @@ export function issueDelete(id, showError, onSuccess) {
       });
       onSuccess();
 
-      clearCacheById(dispatch, getState, id, showError);
+      clearIssuesCache(dispatch, getState, id, showError);
     }
   };
 }

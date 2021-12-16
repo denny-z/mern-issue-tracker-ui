@@ -1,3 +1,4 @@
+import { getRelatedIdentities } from '../../filterUtils.js';
 import {
   ISSUES_LIST_LOADED,
   ISSUES_LIST_LOADING,
@@ -106,10 +107,7 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
     case ISSUES_LIST_CACHE_RESET: {
       const identityToIssueIds = { ...state.identityToIssueIds };
 
-      const identities = Object.entries(state.identityToIssueIds)
-        .filter(([query, ids]) => ids.includes(p.id)) // eslint-disable-line no-unused-vars
-        .map(([query, ids]) => query); // eslint-disable-line no-unused-vars
-
+      const identities = getRelatedIdentities(identityToIssueIds, p.id, p.changedKeys);
 
       identities.forEach((identity) => { identityToIssueIds[identity] = null; });
 

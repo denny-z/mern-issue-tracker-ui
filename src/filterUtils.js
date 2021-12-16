@@ -37,3 +37,28 @@ export function generateCacheIdentity(match, search) {
   keys.forEach((key) => { identifyVars[key] = vars[key]; });
   return JSON.stringify(identifyVars);
 }
+
+function deserializeCacheIdentity(identity) {
+  return JSON.parse(identity);
+}
+
+const IDENTITY_KEYS_TO_ISSUE_KEYS = {
+  effortMax: 'effort',
+  effortMin: 'effort',
+  status: 'status',
+};
+
+export function getRelatedIdentities(identitesToIds, id, changedKeys) {
+  const hasIdOrFields = ([identity, identityIds]) => {
+    const identityKeys = Object.keys(deserializeCacheIdentity(identity));
+    const commonKeys = identityKeys
+      .filter(key => changedKeys.includes(IDENTITY_KEYS_TO_ISSUE_KEYS[key]));
+    const hasCommonKeys = commonKeys.length !== 0;
+
+    return (identityIds && identityIds.includes(id)) || hasCommonKeys;
+  };
+
+  return Object.entries(identitesToIds)
+    .filter(hasIdOrFields)
+    .map(([identity]) => identity);
+}
