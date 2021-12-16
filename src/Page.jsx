@@ -30,7 +30,7 @@ function NavBar({ onUserChange }) {
         </LinkContainer>
       </Nav>
       <Col xs={5}>
-        <Navbar.Form>
+        <Navbar.Form style={{ marginBottom: 0 }}>
           <Search />
         </Navbar.Form>
       </Col>
