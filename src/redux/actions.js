@@ -72,14 +72,7 @@ function loadIssuesByVars(queryVars, currentCacheIdentity, showError) {
   };
 }
 
-// eslint-disable-next-line max-len
-// TODO [react-redux]: Fix console error when last issue deleted from page. See isCurrentIssuePageNeedsLoad.
-function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
-  dispatch({
-    type: ISSUES_LIST_CACHE_RESET,
-    payload: { id, changedKeys },
-  });
-
+function reloadCurrentPageIfNeeded(dispatch, getState, showError) {
   // INFO: This check for current page reload might help when Live Editing comes.
   if (isCurrentIssuePageNeedsLoad(getState())) {
     dispatch({ type: ISSUES_LIST_LOADING });
@@ -89,6 +82,17 @@ function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
       loadIssuesByVars(currentListVars, currentCacheIdentity, showError),
     );
   }
+}
+
+// eslint-disable-next-line max-len
+// TODO [react-redux]: Fix console error when last issue deleted from page. See isCurrentIssuePageNeedsLoad.
+function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
+  dispatch({
+    type: ISSUES_LIST_CACHE_RESET,
+    payload: { id, changedKeys },
+  });
+
+  reloadCurrentPageIfNeeded(dispatch, getState, showError);
 }
 
 export function initLoadIssues(match, search, showError) {
@@ -265,7 +269,7 @@ export function issueRestore(id, showError, onSuccess) {
 }
 
 export function issueCreate(issue, showError, onSuccess) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     const data = await graphQLFetch(ISSUE_CREATE_QUERY, { issue }, showError);
 
     if (data) {
@@ -273,10 +277,8 @@ export function issueCreate(issue, showError, onSuccess) {
         type: ISSUE_CREATED,
         payload: data.addIssue,
       });
-
       onSuccess(data.addIssue);
-
-      // TODO: [react-redux] invalidate (all?) page cache. [issues-reducer]
+      reloadCurrentPageIfNeeded(dispatch, getState, showError);
     }
   };
 }

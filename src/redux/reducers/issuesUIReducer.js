@@ -1,4 +1,4 @@
-import { getRelatedIdentities } from '../../filterUtils.js';
+import { getRelatedIdentities, getRelatedIdentitiesOnIssueCreate } from '../../filterUtils.js';
 import {
   ISSUES_LIST_LOADED,
   ISSUES_LIST_LOADING,
@@ -50,10 +50,6 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
         currentListVars,
         identityToPages,
       };
-    }
-    case ISSUE_CREATED: {
-      // TODO: [react-redux] invalidate cache for last pages. [issues-reducer]
-      return state;
     }
     case ISSUE_LOADING: {
       const loadingIds = { ...state.loadingIds };
@@ -107,6 +103,16 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
 
       const identities = getRelatedIdentities(identityToIssueIds, p.id, p.changedKeys);
 
+      identities.forEach((identity) => { identityToIssueIds[identity] = null; });
+
+      return {
+        ...state,
+        identityToIssueIds,
+      };
+    }
+    case ISSUE_CREATED: {
+      const identityToIssueIds = { ...state.identityToIssueIds };
+      const identities = getRelatedIdentitiesOnIssueCreate(identityToIssueIds);
       identities.forEach((identity) => { identityToIssueIds[identity] = null; });
 
       return {

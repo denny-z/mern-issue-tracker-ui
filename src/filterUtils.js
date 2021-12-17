@@ -29,17 +29,21 @@ export function prepareListVars(match, search) {
   return vars;
 }
 
+function deserializeCacheIdentity(identityString) {
+  return JSON.parse(identityString);
+}
+
+function serializeCacheIdentity(identityObject) {
+  return JSON.stringify(identityObject);
+}
+
 const OMMITED_IDENTITY_KEYS = ['hasSelection', 'selectedId'];
 export function generateCacheIdentity(match, search) {
   const vars = prepareListVars(match, search);
   const keys = Object.keys(vars).filter(key => !OMMITED_IDENTITY_KEYS.includes(key)).sort();
   const identifyVars = {};
   keys.forEach((key) => { identifyVars[key] = vars[key]; });
-  return JSON.stringify(identifyVars);
-}
-
-function deserializeCacheIdentity(identity) {
-  return JSON.parse(identity);
+  return serializeCacheIdentity(identifyVars);
 }
 
 const IDENTITY_KEYS_TO_ISSUE_KEYS = {
@@ -48,8 +52,8 @@ const IDENTITY_KEYS_TO_ISSUE_KEYS = {
   status: 'status',
 };
 
-export function getRelatedIdentities(identitesToIds, id, changedKeys) {
-  const hasIdOrFields = ([identity, identityIds]) => {
+function hasIdOrFieldsFn(changedKeys, id) {
+  return ([identity, identityIds]) => {
     const identityKeys = Object.keys(deserializeCacheIdentity(identity));
     const commonKeys = identityKeys
       .filter(key => changedKeys.includes(IDENTITY_KEYS_TO_ISSUE_KEYS[key]));
@@ -57,8 +61,26 @@ export function getRelatedIdentities(identitesToIds, id, changedKeys) {
 
     return (identityIds && identityIds.includes(id)) || hasCommonKeys;
   };
+}
+
+export function getRelatedIdentities(identitesToIds, id, changedKeys) {
+  const hasIdOrFields = hasIdOrFieldsFn(changedKeys, id);
 
   return Object.entries(identitesToIds)
     .filter(hasIdOrFields)
     .map(([identity]) => identity);
+}
+
+function isAllOrHasNewStatusFn(identity) {
+  const identityKeys = Object.keys(identity);
+  if (identityKeys.length === 1 && identityKeys[0] === 'page') return true; // Has no filters set.
+  if (identityKeys.includes('status') && identity.status === 'New') return true; // Has status == 'New' filter set.
+  return false;
+}
+
+export function getRelatedIdentitiesOnIssueCreate(identitiesToIds) {
+  return Object.keys(identitiesToIds)
+    .map(deserializeCacheIdentity)
+    .filter(isAllOrHasNewStatusFn)
+    .map(serializeCacheIdentity);
 }
