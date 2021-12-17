@@ -55,3 +55,7 @@ export function getCurrentIdentity(state) {
 export function getFilterData(state) {
   return [state.issuesUI.present.currentListVars, state.issuesUI.present.currentCacheIdentity];
 }
+
+export function getJumpToDeletedActionIndex(state) {
+  return state.issuesUI.lastDeletedActionIndex;
+}

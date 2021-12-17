@@ -4,7 +4,6 @@ import {
   ISSUES_LIST_LOADING,
   ISSUE_DELETED,
   ISSUE_LOADED,
-  ISSUE_RESTORED,
   ISSUE_UPDATED,
   ISSUE_CREATED,
   ISSUES_LIST_CACHE_HIT,
@@ -52,7 +51,6 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
         identityToPages,
       };
     }
-    case ISSUE_RESTORED:
     case ISSUE_CREATED: {
       // TODO: [react-redux] invalidate cache for last pages. [issues-reducer]
       return state;

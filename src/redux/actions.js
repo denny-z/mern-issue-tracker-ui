@@ -1,3 +1,4 @@
+import { ActionCreators } from 'redux-undo';
 import {
   issueLoadQueryBuilder,
   ISSUE_CLOSE_QUERY,
@@ -19,6 +20,7 @@ import {
   getIssue,
   getIssueLoading,
   getSelectedIssue,
+  getJumpToDeletedActionIndex,
   isCurrentIssuePageNeedsLoad,
 } from './selectors.js';
 import {
@@ -30,7 +32,6 @@ import {
   ISSUE_LOADED,
   ISSUE_UPDATED,
   ISSUE_DELETED,
-  ISSUE_RESTORED,
   ISSUE_SELECTED,
   ISSUE_CREATED,
   ISSUE_LOADING,
@@ -236,24 +237,29 @@ export function issueDelete(id, showError, onSuccess) {
   };
 }
 
-// TODO: [react-redux] fix that issue does not appear.
-// Steps:
-// 1. Delete issue.
-// 2. Restore issue from Toast by clicking "Undo".
-// Actual result: Issue does not appear in issues list.
-// Expected result: Issue will appear (at least at the bottom of current list).
+/*  TODO: [react-redux] fix bug when not correct page of issues list shown.
+    Steps:
+      1. Go to list page e.g. #1. Delete one issue.
+      2. Quickly change page to another page. E.g. #2.
+      3. Click "UNDO" in toast.
+    Actual result: Page URL remains the same e.g. #2, but issues are shown from page #1.
+    Expected result (need to decide):
+      Option 1. Show issues according to current page. E.g. if it #2 then issues from page #2.
+        Implementation: check page changed in IssueList (or which compoment loads)
+        issues, if page changed, trigger load.
+      Option 2: Show issues and URL where issue was Undone.
+        Implementation: Probably, need to tie route params
+        to redux sync current page in redux and URL.
+        Concern: Not sure, but this "need to be filtered" when Live Editing feature comes.
+*/
 export function issueRestore(id, showError, onSuccess) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);
 
     if (data && data.issueRestore) {
-      dispatch({
-        type: ISSUE_RESTORED,
-        payload: data,
-      });
+      const index = getJumpToDeletedActionIndex(getState());
+      dispatch(ActionCreators.jumpToPast(index));
       onSuccess();
-
-      // TODO: [react-redux] invalidate (all?) page cache. [issues-reducer]
     }
   };
 }
