@@ -10,16 +10,19 @@ const SECTION_SIZE = 5;
 function PageLink({
   params, page, activePage, children,
 }) {
-  params.set('page', page);
   if (page === 0) return React.cloneElement(children, { disabled: true });
 
   // INFO: Remove page=1 from path, as 1-st is default.
-  const search = `?${params.toString().replace(/&?page=1$/, '')}`;
+  if (page === 1) {
+    params.delete('page');
+  } else {
+    params.set('page', page);
+  }
 
   return (
     <LinkContainer
       isActive={() => page === activePage}
-      to={{ search }}
+      to={{ search: `?${params.toString()}` }}
     >
       {children}
     </LinkContainer>
