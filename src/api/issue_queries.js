@@ -109,13 +109,7 @@ export const ISSUE_RESTORE_QUERY = `
 export const ISSUE_CREATE_QUERY = `
   mutation AddIssue($issue: IssueInputs!) {
     addIssue(issue: $issue) {
-      id
-      title
-      owner
-      status
-      created
-      effort
-      due
+      ${ISSUE_FIELDS.join(' ')}
     }  
   }
 `;
