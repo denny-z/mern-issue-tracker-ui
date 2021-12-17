@@ -84,8 +84,6 @@ function reloadCurrentPageIfNeeded(dispatch, getState, showError) {
   }
 }
 
-// eslint-disable-next-line max-len
-// TODO [react-redux]: Fix console error when last issue deleted from page. See isCurrentIssuePageNeedsLoad.
 function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
   dispatch({
     type: ISSUES_LIST_CACHE_RESET,
@@ -220,8 +218,9 @@ export function issueClose(id, showError) {
   };
 }
 
-// TODO: [react-redux] Fix totalPages and pages size does not change on ISSUE_DELETE.
 // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
+// TODO: [react-redux] fix LOW bug. Total pages count does not refresh on prev page
+//   when last issue from the current page.
 // IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
 export function issueDelete(id, showError, onSuccess) {
   return async (dispatch, getState) => {
