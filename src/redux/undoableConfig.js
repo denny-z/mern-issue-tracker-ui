@@ -32,6 +32,10 @@ const config = {
   filter: includeAction([ISSUE_DELETED, ISSUES_LIST_LOADED, ISSUE_CACHE_HIT]),
 };
 
-export default function undoableEnhancer(reducer) {
-  return rememberLastDeleteEnhancer(undoable(reducer, config));
+export default function undoableEnhancer(reducer, params = { withRemember: true }) {
+  const undoableWrap = undoable(reducer, config);
+
+  return params.withRemember
+    ? rememberLastDeleteEnhancer(undoableWrap)
+    : undoableWrap;
 }

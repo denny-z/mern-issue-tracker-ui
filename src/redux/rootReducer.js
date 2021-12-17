@@ -6,6 +6,6 @@ import undoableEnhancer from './undoableConfig.js';
 
 export default combineReducers({
   issueCounts: statsReducer,
-  issues: undoableEnhancer(issuesReducer),
+  issues: undoableEnhancer(issuesReducer, { withRemember: false }),
   issuesUI: undoableEnhancer(issuesUIReducer),
 });
