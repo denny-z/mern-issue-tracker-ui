@@ -248,7 +248,7 @@ export function issueDelete(id, showError, onSuccess) {
     Actual result: Page URL remains the same e.g. #2, but issues are shown from page #1.
     Expected result (need to decide):
       Option 1. Show issues according to current page. E.g. if it #2 then issues from page #2.
-        Implementation: check page changed in IssueList (or which compoment loads)
+        Implementation: check page changed in IssueList (or which component loads)
         issues, if page changed, trigger load.
       Option 2: Show issues and URL where issue was Undone.
         Implementation: Probably, need to tie route params

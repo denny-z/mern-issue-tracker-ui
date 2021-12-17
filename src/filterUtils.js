@@ -73,9 +73,9 @@ export function getRelatedIdentities(identitesToIds, id, changedKeys) {
 
 function isAllOrHasNewStatusFn(identity) {
   const identityKeys = Object.keys(identity);
-  if (identityKeys.length === 1 && identityKeys[0] === 'page') return true; // Has no filters set.
-  if (identityKeys.includes('status') && identity.status === 'New') return true; // Has status == 'New' filter set.
-  return false;
+  const hasNoFilters = identityKeys.length === 1 && identityKeys[0] === 'page';
+  const hasNewFilterStatus = identityKeys.includes('status') && identity.status === 'New';
+  return hasNoFilters || hasNewFilterStatus;
 }
 
 export function getRelatedIdentitiesOnIssueCreate(identitiesToIds) {
