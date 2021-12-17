@@ -240,21 +240,6 @@ export function issueDelete(id, showError, onSuccess) {
   };
 }
 
-/*  TODO: [react-redux] fix bug when not correct page of issues list shown.
-    Steps:
-      1. Go to list page e.g. #1. Delete one issue.
-      2. Quickly change page to another page. E.g. #2.
-      3. Click "UNDO" in toast.
-    Actual result: Page URL remains the same e.g. #2, but issues are shown from page #1.
-    Expected result (need to decide):
-      Option 1. Show issues according to current page. E.g. if it #2 then issues from page #2.
-        Implementation: check page changed in IssueList (or which component loads)
-        issues, if page changed, trigger load.
-      Option 2: Show issues and URL where issue was Undone.
-        Implementation: Probably, need to tie route params
-        to redux sync current page in redux and URL.
-        Concern: Not sure, but this "need to be filtered" when Live Editing feature comes.
-*/
 export function issueRestore(id, showError, onSuccess) {
   return async (dispatch, getState) => {
     const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);

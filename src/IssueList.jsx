@@ -9,7 +9,7 @@ import PagintationWithSections from './PaginationWithSections.jsx';
 import {
   issueClose, issueDelete, issueRestore, loadIssuePreview, initLoadIssues,
 } from './redux/actions.js';
-import { getIssueListLoading } from './redux/selectors.js';
+import { getCurrentIdentity, getIssueListLoading } from './redux/selectors.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search, showError) {
@@ -31,20 +31,26 @@ class IssueList extends React.Component {
     const {
       location: { search: prevSearch },
       match: { params: { id: prevId } },
+      pageIdentity: prevPageIdentity,
     } = prevProps;
-    const { location: { search }, match: { params: { id } } } = this.props;
+    const {
+      location: { search },
+      match: { params: { id } },
+      pageIdentity,
+    } = this.props;
 
     const isSearchChanged = prevSearch !== search;
     const isIdChanged = prevId !== id;
+    const isPageIdentityChanged = prevPageIdentity !== pageIdentity;
 
-    if (!isIdChanged && !isSearchChanged) return;
-
-    if (!Number.isNaN(parseInt(id, 10)) && isIdChanged && !isSearchChanged) {
-      this.loadSelectedIssue();
+    if (isSearchChanged || isPageIdentityChanged) {
+      this.loadData();
       return;
     }
 
-    this.loadData();
+    if (!Number.isNaN(parseInt(id, 10)) && isIdChanged) {
+      this.loadSelectedIssue();
+    }
   }
 
   // INFO: Store will identify whether need to reload data if needed.
@@ -142,6 +148,7 @@ class IssueList extends React.Component {
 
 const mapStateToProps = state => ({
   isLoading: getIssueListLoading(state),
+  pageIdentity: getCurrentIdentity(state),
 });
 const Connected = connect(mapStateToProps, null)(IssueList);
 const WithToast = withToast(Connected);
