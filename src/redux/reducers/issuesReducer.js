@@ -23,9 +23,9 @@ export default function issuesReducer(state = initialState, { payload: p, type }
         newIssues = payloadIssues;
       }
 
-      const selectedIssueId = p.issue && p.issue.id;
-      if (selectedIssueId != null) {
-        const foundIssueIndex = newIssues.findIndex(i => i.id === selectedIssueId);
+      const loadedSelectedIssueId = p.issue && p.issue.id;
+      if (loadedSelectedIssueId != null) {
+        const foundIssueIndex = newIssues.findIndex(i => i.id === loadedSelectedIssueId);
         if (foundIssueIndex !== -1) {
           Object.assign(newIssues[foundIssueIndex], p.issue);
         } else {
@@ -36,7 +36,7 @@ export default function issuesReducer(state = initialState, { payload: p, type }
       return {
         ...state,
         all: newIssues,
-        selectedIssueId,
+        selectedIssueId: loadedSelectedIssueId || state.selectedIssueId,
       };
     }
     case ISSUE_SELECTED: {
