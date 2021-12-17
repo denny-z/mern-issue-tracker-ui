@@ -14,7 +14,12 @@ import { generateCacheIdentity, prepareIssueFilterVars, prepareListVars } from '
 import graphQLFetch from '../graphQLFetch.js';
 import { getFieldsListDiff } from '../utils/objectUtils.js';
 import {
-  getCacheIdentities, getIssue, getIssueLoading, getSelectedIssue, isCurrentIssuePageNeedsLoad,
+  getCacheIdentities,
+  getFilterData,
+  getIssue,
+  getIssueLoading,
+  getSelectedIssue,
+  isCurrentIssuePageNeedsLoad,
 } from './selectors.js';
 import {
   STATS_CLEAR,
@@ -78,7 +83,7 @@ function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
   if (isCurrentIssuePageNeedsLoad(getState())) {
     dispatch({ type: ISSUES_LIST_LOADING });
 
-    const { currentListVars, currentCacheIdentity } = getState().issuesUI;
+    const [currentListVars, currentCacheIdentity] = getFilterData(getState());
     dispatch(
       loadIssuesByVars(currentListVars, currentCacheIdentity, showError),
     );
