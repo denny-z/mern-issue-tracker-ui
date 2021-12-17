@@ -12,10 +12,14 @@ function PageLink({
 }) {
   params.set('page', page);
   if (page === 0) return React.cloneElement(children, { disabled: true });
+
+  // INFO: Remove page=1 from path, as 1-st is default.
+  const search = `?${params.toString().replace(/&?page=1$/, '')}`;
+
   return (
     <LinkContainer
       isActive={() => page === activePage}
-      to={{ search: `?${params.toString()}` }}
+      to={{ search }}
     >
       {children}
     </LinkContainer>
