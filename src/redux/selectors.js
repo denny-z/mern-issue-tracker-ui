@@ -59,3 +59,7 @@ export function getFilterData(state) {
 export function getJumpToDeletedActionIndex(state) {
   return state.issuesUI.lastDeletedActionIndex;
 }
+
+export function getErrorMessage(state) {
+  return state.notification.errorMessage;
+}

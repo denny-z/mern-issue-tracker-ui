@@ -12,7 +12,7 @@ import {
 } from '../api/issue_queries.js';
 import { ISSUE_FIELDS } from '../constants.js';
 import { generateCacheIdentity, prepareIssueFilterVars, prepareListVars } from '../filterUtils.js';
-import graphQLFetch from '../graphQLFetch.js';
+import graphQLFetch, { formatErrorToMessage, tryGraphQLFetch } from '../graphQLFetch.js';
 import { getFieldsListDiff } from '../utils/objectUtils.js';
 import {
   getCacheIdentities,
@@ -37,19 +37,36 @@ import {
   ISSUE_LOADING,
   ISSUE_CACHE_HIT,
   ISSUES_LIST_CACHE_RESET,
+  GENERAL_ERROR,
+  STATS_LOAD_ERROR,
 } from './types.js';
 
-// TODO: [react-redux] Implement global error handling instead of pass showError argument.
-export function loadStats(match, search, showError) {
-  return async (dispatch) => {
-    const params = new URLSearchParams(search);
-    const vars = prepareIssueFilterVars(params);
-    const data = await graphQLFetch(ISSUE_REPORT_QUERY, vars, showError);
+function onError(errorMessage, type = GENERAL_ERROR) {
+  return {
+    type,
+    error: { errorMessage },
+  };
+}
 
-    dispatch({
-      type: STATS_LOADED,
-      payload: data,
-    });
+export function loadStats(match, search) {
+  return async (dispatch) => {
+    try {
+      const params = new URLSearchParams(search);
+      const vars = prepareIssueFilterVars(params);
+      const result = await tryGraphQLFetch(ISSUE_REPORT_QUERY, vars);
+
+      if (result.errors == null) {
+        dispatch({
+          type: STATS_LOADED,
+          payload: result.data,
+        });
+      } else {
+        const errorMessage = formatErrorToMessage(result.errors[0]);
+        dispatch(onError(errorMessage, STATS_LOAD_ERROR));
+      }
+    } catch (e) {
+      dispatch(onError(e.message, STATS_LOAD_ERROR));
+    }
   };
 }
 

@@ -3,6 +3,7 @@ import {
   Navbar, Nav, NavItem, Glyphicon, NavDropdown, MenuItem, Grid, Col,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
+import ToastGeneral from './components/ToastGeneral.jsx';
 import Contents from './Contents.jsx';
 import graphQLFetch from './graphQLFetch.js';
 import IssueAddNavItem from './IssueAddNavItem.jsx';
@@ -103,6 +104,7 @@ export default class Page extends React.Component {
           <NavBar />
           <Grid fluid>
             <Contents />
+            <ToastGeneral />
           </Grid>
           <Footer />
         </UserContext.Provider>
