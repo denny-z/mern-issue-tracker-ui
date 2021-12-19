@@ -37,14 +37,23 @@ import {
   ISSUE_LOADING,
   ISSUE_CACHE_HIT,
   ISSUES_LIST_CACHE_RESET,
-  GENERAL_ERROR,
+  ERROR_GENERAL,
   STATS_LOAD_ERROR,
+  ERROR_HIDE,
 } from './types.js';
 
-function onError(errorMessage, type = GENERAL_ERROR) {
+export function hideError() {
   return {
-    type,
-    error: { errorMessage },
+    type: ERROR_HIDE,
+  };
+}
+
+function onError(errorMessage, type = ERROR_GENERAL) {
+  return (dispatch) => {
+    dispatch({
+      type,
+      error: { errorMessage },
+    });
   };
 }
 

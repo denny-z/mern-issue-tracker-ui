@@ -63,3 +63,7 @@ export function getJumpToDeletedActionIndex(state) {
 export function getErrorMessage(state) {
   return state.notification.errorMessage;
 }
+
+export function needShowError(state) {
+  return state.notification.needShow;
+}
