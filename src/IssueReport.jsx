@@ -2,13 +2,12 @@ import React, { Component } from 'react';
 import { Panel, Table } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import IssueFilter from './IssueFilter.jsx';
-import withToast from './withToast.jsx';
 import { ISSUE_STATUS_LIST } from './constants.js';
-import { loadStats, clearStats } from './redux/actions.js';
+import { loadStats as loadStatsAction, clearStats as clearStatsAction } from './redux/actions.js';
 
 class IssueReport extends Component {
-  static async fetchData(match, search, showError) {
-    return loadStats(match, search, showError);
+  static async fetchData(match, search) {
+    return loadStatsAction(search);
   }
 
   componentDidMount() {
@@ -25,15 +24,16 @@ class IssueReport extends Component {
   }
 
   componentWillUnmount() {
-    const { dispatch } = this.props;
-    dispatch(clearStats());
+    const { clearStats } = this.props;
+    clearStats();
   }
 
   async loadData() {
     const {
-      location: { search }, match, showError, dispatch,
+      location: { search }, loadStats,
     } = this.props;
-    dispatch(loadStats(match, search, showError));
+
+    loadStats(search);
   }
 
   renderStatRows() {
@@ -110,7 +110,12 @@ const mapStateToProps = state => ({
   stats: state.issueCounts.stats,
   isLoaded: state.issueCounts.isLoaded,
 });
-const Connected = connect(mapStateToProps, null)(IssueReport);
-const WithToast = withToast(Connected);
-WithToast.fetchData = IssueReport.fetchData;
-export default WithToast;
+
+const mapDispatchToProps = dispatch => ({
+  loadStats: search => dispatch(loadStatsAction((search))),
+  clearStats: () => dispatch(clearStatsAction()),
+});
+
+const Connected = connect(mapStateToProps, mapDispatchToProps)(IssueReport);
+Connected.fetchData = IssueReport.fetchData;
+export default Connected;

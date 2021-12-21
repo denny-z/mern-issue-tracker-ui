@@ -54,7 +54,7 @@ class IssueAddNavItem extends Component {
       title,
       due: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 10), // 10 days later.
     };
-    const { showError, onCreate } = this.props;
+    const { onCreate } = this.props;
 
     const onSuccess = (createdIssue) => {
       const { history } = this.props;
@@ -65,7 +65,7 @@ class IssueAddNavItem extends Component {
       history.push(`/edit/${createdIssue.id}`);
     };
 
-    onCreate(issue, showError, onSuccess);
+    onCreate(issue, onSuccess);
   }
 
   render() {
@@ -125,7 +125,7 @@ delete WithRouter.contextType;
 const WithToast = withToast(WithRouter);
 
 const mapDispatchToProps = dispatch => ({
-  onCreate: (issue, showError, onSuccess) => dispatch(issueCreate(issue, showError, onSuccess)),
+  onCreate: (issue, onSuccess) => dispatch(issueCreate(issue, onSuccess)),
 });
 const Connected = connect(null, mapDispatchToProps)(WithToast);
 export default Connected;

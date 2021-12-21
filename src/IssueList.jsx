@@ -9,11 +9,11 @@ import PagintationWithSections from './PaginationWithSections.jsx';
 import {
   issueClose, issueDelete, issueRestore, loadIssuePreview, initLoadIssues,
 } from './redux/actions.js';
-import { getCurrentIdentity, getIssueListLoading } from './redux/selectors.js';
+import { getCurrentIdentity, getIssueListIsError, getIssueListLoading } from './redux/selectors.js';
 
 class IssueList extends React.Component {
-  static async fetchData(match, search, showError) {
-    return initLoadIssues(match, search, showError);
+  static async fetchData(match, search) {
+    return initLoadIssues(match, search);
   }
 
   constructor() {
@@ -57,11 +57,10 @@ class IssueList extends React.Component {
   async loadData() {
     const {
       match, location: { search },
-      showError,
       dispatch,
     } = this.props;
 
-    dispatch(initLoadIssues(match, search, showError));
+    dispatch(initLoadIssues(match, search));
   }
 
   // INFO: This function should be used when only selected issue. It will help to reduce
@@ -69,20 +68,19 @@ class IssueList extends React.Component {
   async loadSelectedIssue() {
     const {
       match: { params: { id } },
-      showError,
       dispatch,
     } = this.props;
 
-    dispatch(loadIssuePreview(parseInt(id, 10), showError));
+    dispatch(loadIssuePreview(parseInt(id, 10)));
   }
 
   async closeIssue(id) {
-    const { showError, dispatch } = this.props;
-    dispatch(issueClose(id, showError));
+    const { dispatch } = this.props;
+    dispatch(issueClose(id));
   }
 
   async deleteIssue(id) {
-    const { showError, showSuccess, dispatch } = this.props;
+    const { showSuccess, dispatch } = this.props;
 
     const onSuccess = () => {
       const undoMessage = (
@@ -101,19 +99,19 @@ class IssueList extends React.Component {
       }
     };
 
-    dispatch(issueDelete(id, showError, onSuccess));
+    dispatch(issueDelete(id, onSuccess));
     // TODO: [react-redux] fix it.
     // Handle case when server side returned data.deletedIssue === false.
   }
 
   restoreIssue(id) {
-    const { showError, showSuccess, dispatch } = this.props;
+    const { showSuccess, dispatch } = this.props;
     const showSuccessWithMessage = () => showSuccess(`Issue ${id} restored successfully.`);
-    dispatch(issueRestore(id, showError, showSuccessWithMessage));
+    dispatch(issueRestore(id, showSuccessWithMessage));
   }
 
   render() {
-    const { isLoading } = this.props;
+    const { isLoading, isError } = this.props;
 
     // TODO: [ui-features] fix flicking while issues are loading.
     // Show spinner on top of current table with issues.
@@ -121,6 +119,12 @@ class IssueList extends React.Component {
     if (isLoading) {
       return (
         <h2 className="text-center">Loading...</h2>
+      );
+    }
+
+    if (isError) {
+      return (
+        <h2 className="text-center">Sorry, something went wrong...</h2>
       );
     }
 
@@ -148,6 +152,7 @@ class IssueList extends React.Component {
 
 const mapStateToProps = state => ({
   isLoading: getIssueListLoading(state),
+  isError: getIssueListIsError(state),
   pageIdentity: getCurrentIdentity(state),
 });
 const Connected = connect(mapStateToProps, null)(IssueList);

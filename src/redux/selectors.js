@@ -39,6 +39,10 @@ export function getIssueListLoading(state) {
   return state.issuesUI.present.isLoading;
 }
 
+export function getIssueListIsError(state) {
+  return state.issuesUI.present.isError;
+}
+
 export function getIssuesPagesCount(state) {
   const { identityToPages, currentCacheIdentity } = state.issuesUI.present;
   return identityToPages[currentCacheIdentity];

@@ -18,9 +18,10 @@ import {
 import { getIssue, getIssueLoading } from './redux/selectors.js';
 
 class IssueEdit extends React.Component {
-  static async fetchData(match, search, showError) {
+  // eslint-disable-next-line no-unused-vars
+  static async fetchData(match, search) {
     const { params: { id } } = match;
-    return loadIssueAction(id, showError);
+    return loadIssueAction(id);
   }
 
   constructor(props) {
@@ -98,12 +99,11 @@ class IssueEdit extends React.Component {
   async loadData() {
     const {
       match: { params: { id: paramsId } },
-      showError,
       loadIssue,
     } = this.props;
     const id = parseInt(paramsId, 10);
 
-    loadIssue(id, showError, this.updateIssueInState);
+    loadIssue(id, this.updateIssueInState);
   }
 
   showSuccessMessage() {
@@ -117,9 +117,9 @@ class IssueEdit extends React.Component {
     const { issue, invalidFields } = this.state;
     if (Object.keys(invalidFields).length !== 0) return;
 
-    const { showError, updateIssue } = this.props;
+    const { updateIssue } = this.props;
 
-    updateIssue(issue, showError, this.showSuccessMessage);
+    updateIssue(issue, this.showSuccessMessage);
   }
 
   showValidation() {
@@ -160,7 +160,7 @@ class IssueEdit extends React.Component {
     if (Object.keys(invalidFields).length !== 0 && needShowValidation) {
       validationMessage = (
         <Alert bsStyle="danger" onDismiss={this.hideValidation}>
-          Please correct invalid fields before sumbitting.
+          Please correct invalid fields before submitting.
         </Alert>
       );
     }
@@ -313,11 +313,11 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = dispatch => ({
-  loadIssue: (id, showError, onSuccess) => {
-    dispatch(loadIssueAction(id, showError, onSuccess));
+  loadIssue: (id, onSuccess) => {
+    dispatch(loadIssueAction(id, onSuccess));
   },
-  updateIssue: (issue, showError, onSuccess) => {
-    dispatch(updateIssueAction(issue, showError, onSuccess));
+  updateIssue: (issue, onSuccess) => {
+    dispatch(updateIssueAction(issue, onSuccess));
   },
 });
 

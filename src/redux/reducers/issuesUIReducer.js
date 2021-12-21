@@ -10,6 +10,7 @@ import {
   ISSUE_LOADING,
   ISSUE_CACHE_HIT,
   ISSUES_LIST_CACHE_RESET,
+  ISSUES_LIST_LOAD_ERROR,
 } from '../types.js';
 
 const issuesInitialState = {
@@ -24,11 +25,13 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
       return {
         ...state,
         isLoading: true,
+        isError: false,
       };
     case ISSUES_LIST_CACHE_HIT:
       return {
         ...state,
         isLoading: false,
+        isError: false,
         currentCacheIdentity: p.meta.currentCacheIdentity,
         currentListVars: p.meta.currentListVars,
       };
@@ -46,9 +49,17 @@ export default function issuesUIReducer(state = issuesInitialState, { payload: p
         ...state,
         identityToIssueIds,
         isLoading: false,
+        isError: false,
         currentCacheIdentity,
         currentListVars,
         identityToPages,
+      };
+    }
+    case ISSUES_LIST_LOAD_ERROR: {
+      return {
+        ...state,
+        isLoading: false,
+        isError: true,
       };
     }
     case ISSUE_LOADING: {

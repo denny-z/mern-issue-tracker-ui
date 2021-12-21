@@ -12,7 +12,7 @@ import {
 } from '../api/issue_queries.js';
 import { ISSUE_FIELDS } from '../constants.js';
 import { generateCacheIdentity, prepareIssueFilterVars, prepareListVars } from '../filterUtils.js';
-import graphQLFetch, { formatErrorToMessage, tryGraphQLFetch } from '../graphQLFetch.js';
+import { formatErrorToMessage, tryGraphQLFetch } from '../graphQLFetch.js';
 import { getFieldsListDiff } from '../utils/objectUtils.js';
 import {
   getCacheIdentities,
@@ -40,6 +40,12 @@ import {
   ERROR_GENERAL,
   STATS_LOAD_ERROR,
   ERROR_HIDE,
+  ISSUES_LIST_LOAD_ERROR,
+  ISSUE_LOAD_ERROR,
+  ISSUE_UPDATE_ERROR,
+  ISSUE_CREATE_ERROR,
+  ISSUE_DELETE_ERROR,
+  ISSUE_RESTORE_ERROR,
 } from './types.js';
 
 export function hideError() {
@@ -57,22 +63,30 @@ function onError(errorMessage, type = ERROR_GENERAL) {
   };
 }
 
-export function loadStats(match, search) {
+function handleApiError(result, dispatch, errorType, onSuccess) {
+  if (result.errors == null) {
+    onSuccess(result.data);
+  } else {
+    const errorMessage = formatErrorToMessage(result.errors[0]);
+    dispatch(onError(errorMessage, errorType));
+  }
+}
+
+export function loadStats(search) {
   return async (dispatch) => {
     try {
       const params = new URLSearchParams(search);
       const vars = prepareIssueFilterVars(params);
       const result = await tryGraphQLFetch(ISSUE_REPORT_QUERY, vars);
 
-      if (result.errors == null) {
+      const onSuccess = (data) => {
         dispatch({
           type: STATS_LOADED,
-          payload: result.data,
+          payload: data,
         });
-      } else {
-        const errorMessage = formatErrorToMessage(result.errors[0]);
-        dispatch(onError(errorMessage, STATS_LOAD_ERROR));
-      }
+      };
+
+      handleApiError(result, dispatch, STATS_LOAD_ERROR, onSuccess);
     } catch (e) {
       dispatch(onError(e.message, STATS_LOAD_ERROR));
     }
@@ -85,162 +99,208 @@ export function clearStats() {
   };
 }
 
-function loadIssuesByVars(queryVars, currentCacheIdentity, showError) {
+function loadIssuesByVars(queryVars, currentCacheIdentity) {
   return async (dispatch) => {
-    const data = await graphQLFetch(ISSUE_LIST_QUERY, queryVars, showError);
-    dispatch({
-      type: ISSUES_LIST_LOADED,
-      payload: Object.assign(
-        data,
-        { meta: { currentCacheIdentity, currentListVars: queryVars } },
-      ),
-    });
+    try {
+      const result = await tryGraphQLFetch(ISSUE_LIST_QUERY, queryVars);
+
+      const onSuccess = (data) => {
+        dispatch({
+          type: ISSUES_LIST_LOADED,
+          payload: Object.assign(
+            data,
+            { meta: { currentCacheIdentity, currentListVars: queryVars } },
+          ),
+        });
+      };
+
+      handleApiError(result, dispatch, ISSUES_LIST_LOAD_ERROR, onSuccess);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUES_LIST_LOAD_ERROR));
+    }
   };
 }
 
-function reloadCurrentPageIfNeeded(dispatch, getState, showError) {
+function reloadCurrentPageIfNeeded(dispatch, getState) {
   // INFO: This check for current page reload might help when Live Editing comes.
   if (isCurrentIssuePageNeedsLoad(getState())) {
     dispatch({ type: ISSUES_LIST_LOADING });
 
     const [currentListVars, currentCacheIdentity] = getFilterData(getState());
     dispatch(
-      loadIssuesByVars(currentListVars, currentCacheIdentity, showError),
+      loadIssuesByVars(currentListVars, currentCacheIdentity),
     );
   }
 }
 
-function clearIssuesCache(dispatch, getState, id, showError, changedKeys = []) {
+function clearIssuesCache(dispatch, getState, id, changedKeys = []) {
   dispatch({
     type: ISSUES_LIST_CACHE_RESET,
     payload: { id, changedKeys },
   });
 
-  reloadCurrentPageIfNeeded(dispatch, getState, showError);
+  reloadCurrentPageIfNeeded(dispatch, getState);
 }
 
-export function initLoadIssues(match, search, showError) {
+export function initLoadIssues(match, search) {
   return (dispatch, getState) => {
-    const vars = prepareListVars(match, search);
-    const currentCacheIdentity = generateCacheIdentity(match, search);
-    const identityToIssueIds = getCacheIdentities(getState());
+    try {
+      const vars = prepareListVars(match, search);
+      const currentCacheIdentity = generateCacheIdentity(match, search);
+      const identityToIssueIds = getCacheIdentities(getState());
 
-    if (identityToIssueIds[currentCacheIdentity]) {
-      dispatch({
-        type: ISSUES_LIST_CACHE_HIT,
-        payload: { meta: { currentCacheIdentity, currentListVars: vars } },
-      });
-      return;
+      if (identityToIssueIds[currentCacheIdentity]) {
+        dispatch({
+          type: ISSUES_LIST_CACHE_HIT,
+          payload: { meta: { currentCacheIdentity, currentListVars: vars } },
+        });
+        return;
+      }
+
+      dispatch({ type: ISSUES_LIST_LOADING });
+      dispatch(loadIssuesByVars(vars, currentCacheIdentity));
+    } catch (error) {
+      dispatch(onError(error.message, ISSUES_LIST_LOAD_ERROR));
     }
-
-    dispatch({ type: ISSUES_LIST_LOADING });
-    dispatch(loadIssuesByVars(vars, currentCacheIdentity, showError));
   };
 }
 
-export function loadIssuePreview(id, showError) {
+export function loadIssuePreview(id) {
   return async (dispatch, getState) => {
-    const vars = { id };
-    dispatch({ type: ISSUE_SELECTED, payload: vars });
+    let loadingTimeout;
+    try {
+      const vars = { id };
+      dispatch({ type: ISSUE_SELECTED, payload: vars });
 
-    if (getIssueLoading(getState(), id)) {
-      return;
+      if (getIssueLoading(getState(), id)) {
+        return;
+      }
+
+      loadingTimeout = setTimeout(() => {
+        dispatch({ type: ISSUE_LOADING, payload: vars });
+      }, 600);
+
+      // INFO: This is a cache field loaded by preview (IssueDetails component).
+      const selectedIssue = getSelectedIssue(getState());
+      if (selectedIssue && 'description' in selectedIssue) {
+        dispatch({ type: ISSUE_CACHE_HIT, payload: vars });
+        clearTimeout(loadingTimeout);
+        return;
+      }
+
+      const onSuccess = (data) => {
+        dispatch({
+          type: ISSUE_LOADED,
+          payload: data,
+        });
+      };
+
+      const result = await tryGraphQLFetch(ISSUE_PREVIEW_QUERY, vars);
+      handleApiError(result, dispatch, ISSUE_LOAD_ERROR, onSuccess);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_LOAD_ERROR));
+    } finally {
+      if (loadingTimeout) clearTimeout(loadingTimeout);
     }
-
-    const loadingTimeout = setTimeout(() => {
-      dispatch({ type: ISSUE_LOADING, payload: vars });
-    }, 600);
-
-    // INFO: This is a cache field loaded by preview.
-    const selectedIssue = getSelectedIssue(getState());
-    if (selectedIssue && 'description' in selectedIssue) {
-      dispatch({ type: ISSUE_CACHE_HIT, payload: vars });
-      clearTimeout(loadingTimeout);
-      return;
-    }
-
-    const data = await graphQLFetch(ISSUE_PREVIEW_QUERY, vars, showError);
-
-    dispatch({
-      type: ISSUE_LOADED,
-      payload: data,
-    });
-    clearTimeout(loadingTimeout);
   };
 }
 
-export function loadIssue(id, showError, onSuccess = (() => {})) {
+export function loadIssue(id, onActionSuccess = (() => {})) {
   return async (dispatch, getState) => {
-    dispatch({ type: ISSUE_LOADING, payload: { id } });
+    try {
+      dispatch({ type: ISSUE_LOADING, payload: { id } });
 
-    const issue = getIssue(getState(), id);
+      const issue = getIssue(getState(), id);
 
-    let fieldsToLoad;
-    if (issue) {
-      fieldsToLoad = ISSUE_FIELDS.filter(fieldName => fieldName === 'id' || !(fieldName in issue));
-    } else {
-      fieldsToLoad = ISSUE_FIELDS;
+      let fieldsToLoad;
+      if (issue) {
+        fieldsToLoad = ISSUE_FIELDS.filter(fieldName => fieldName === 'id' || !(fieldName in issue));
+      } else {
+        fieldsToLoad = ISSUE_FIELDS;
+      }
+
+      if (fieldsToLoad.length === 1 && fieldsToLoad[0] === 'id') {
+        dispatch({ type: ISSUE_CACHE_HIT, payload: { id } });
+        onActionSuccess();
+        return;
+      }
+      const query = issueLoadQueryBuilder(fieldsToLoad);
+      const result = await tryGraphQLFetch(query, { id });
+
+      const onSuccess = (data) => {
+        dispatch({
+          type: ISSUE_LOADED,
+          payload: data,
+        });
+        onActionSuccess();
+      };
+
+      handleApiError(result, dispatch, ISSUE_LOAD_ERROR, onSuccess);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_LOAD_ERROR));
     }
-
-    if (fieldsToLoad.length === 1 && fieldsToLoad[0] === 'id') {
-      dispatch({ type: ISSUE_CACHE_HIT, payload: { id } });
-      onSuccess();
-      return;
-    }
-    const query = issueLoadQueryBuilder(fieldsToLoad);
-    const data = await graphQLFetch(query, { id }, showError);
-
-    dispatch({
-      type: ISSUE_LOADED,
-      payload: data,
-    });
-    onSuccess();
   };
 }
 
-export function updateIssue(issue, showError, onSuccess) {
+export function updateIssue(issue, onActionSuccess) {
   return async (dispatch, getState) => {
-    const { id, created, ...changes } = issue;
-    const issueBeforeUpdate = getIssue(getState(), id);
+    try {
+      const { id, created, ...changes } = issue;
+      const issueBeforeUpdate = getIssue(getState(), id);
 
-    dispatch({ type: ISSUE_LOADING, payload: { id } });
+      dispatch({ type: ISSUE_LOADING, payload: { id } });
 
-    const data = await graphQLFetch(ISSUE_UPDATE_QUERY, { id, changes }, showError);
+      const result = await tryGraphQLFetch(ISSUE_UPDATE_QUERY, { id, changes });
 
-    dispatch({
-      type: ISSUE_UPDATED,
-      payload: data,
-    });
-    onSuccess();
+      const onSuccess = (data) => {
+        dispatch({
+          type: ISSUE_UPDATED,
+          payload: data,
+        });
+        onActionSuccess();
+      };
 
-    // IDEA: These side affects tracking can be a good exercise for saga (redux-saga).
-    const issueAfterUpdate = getIssue(getState(), id);
-    const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
+      handleApiError(result, dispatch, ISSUE_UPDATE_ERROR, onSuccess);
 
-    clearIssuesCache(dispatch, getState, id, showError, changedKeys);
+      // IDEA: These side affects tracking can be a good exercise for saga (redux-saga).
+      const issueAfterUpdate = getIssue(getState(), id);
+      const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
+
+      clearIssuesCache(dispatch, getState, id, changedKeys);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_UPDATE_ERROR));
+    }
   };
 }
 
 // TODO: [react-redux] fix it.
 // Handle error when issue by id is not found as it was implemented before redux add.
-export function issueClose(id, showError) {
+export function issueClose(id) {
   return async (dispatch, getState) => {
-    const vars = { id };
-    const issueBeforeUpdate = getIssue(getState(), id);
-    dispatch({ type: ISSUE_LOADING, payload: vars });
+    try {
+      const vars = { id };
+      const issueBeforeUpdate = getIssue(getState(), id);
+      dispatch({ type: ISSUE_LOADING, payload: vars });
 
-    const data = await graphQLFetch(ISSUE_CLOSE_QUERY, vars, showError);
+      const result = await tryGraphQLFetch(ISSUE_CLOSE_QUERY, vars);
 
-    dispatch({
-      type: ISSUE_UPDATED,
-      payload: data,
-    });
+      const onSuccess = (data) => {
+        dispatch({
+          type: ISSUE_UPDATED,
+          payload: data,
+        });
+      };
 
-    // IDEA: These side affects tracking can be a good exercise for saga (redux-saga).
-    const issueAfterUpdate = getIssue(getState(), id);
-    const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
+      handleApiError(result, dispatch, ISSUE_UPDATE_ERROR, onSuccess);
 
-    clearIssuesCache(dispatch, getState, id, showError, changedKeys);
+      // IDEA: These side affects tracking can be a good exercise for saga (redux-saga).
+      const issueAfterUpdate = getIssue(getState(), id);
+      const changedKeys = getFieldsListDiff(issueBeforeUpdate, issueAfterUpdate);
+
+      clearIssuesCache(dispatch, getState, id, changedKeys);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_UPDATE_ERROR));
+    }
   };
 }
 
@@ -248,47 +308,73 @@ export function issueClose(id, showError) {
 // TODO: [react-redux] fix LOW bug. Total pages count does not refresh on prev page
 //   when last issue from the current page.
 // IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
-export function issueDelete(id, showError, onSuccess) {
+export function issueDelete(id, onActionSuccess) {
   return async (dispatch, getState) => {
-    const vars = { id };
-    dispatch({ type: ISSUE_LOADING, payload: vars });
-    const data = await graphQLFetch(ISSUE_DELETE_QUERY, vars, showError);
+    try {
+      const vars = { id };
+      dispatch({ type: ISSUE_LOADING, payload: vars });
+      const result = await tryGraphQLFetch(ISSUE_DELETE_QUERY, vars);
 
-    if (data && data.deleteIssue) {
-      dispatch({
-        type: ISSUE_DELETED,
-        payload: vars,
-      });
-      onSuccess();
+      const onSuccess = (data) => {
+        if (data && data.deleteIssue) {
+          dispatch({
+            type: ISSUE_DELETED,
+            payload: vars,
+          });
+          onActionSuccess();
 
-      clearIssuesCache(dispatch, getState, id, showError);
+          clearIssuesCache(dispatch, getState, id);
+        } else {
+          dispatch(onError(`There is an error with issue #${id} deletion.`, ISSUE_DELETE_ERROR));
+        }
+      };
+
+      handleApiError(result, dispatch, ISSUE_DELETE_ERROR, onSuccess);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_DELETE_ERROR));
     }
   };
 }
 
-export function issueRestore(id, showError, onSuccess) {
+export function issueRestore(id, onActionSuccess) {
   return async (dispatch, getState) => {
-    const data = await graphQLFetch(ISSUE_RESTORE_QUERY, { id }, showError);
+    try {
+      const result = await tryGraphQLFetch(ISSUE_RESTORE_QUERY, { id });
 
-    if (data && data.issueRestore) {
-      const index = getJumpToDeletedActionIndex(getState());
-      dispatch(ActionCreators.jumpToPast(index));
-      onSuccess();
+      const onSuccess = (data) => {
+        if (data && data.issueRestore) {
+          const index = getJumpToDeletedActionIndex(getState());
+          dispatch(ActionCreators.jumpToPast(index));
+          onActionSuccess();
+        } else {
+          dispatch(onError(`There is an error with issue ${id} restore.`, ISSUE_RESTORE_ERROR));
+        }
+      };
+
+      handleApiError(result, dispatch, ISSUE_RESTORE_ERROR, onSuccess);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_RESTORE_ERROR));
     }
   };
 }
 
-export function issueCreate(issue, showError, onSuccess) {
+export function issueCreate(issue, onActionSuccess) {
   return async (dispatch, getState) => {
-    const data = await graphQLFetch(ISSUE_CREATE_QUERY, { issue }, showError);
+    try {
+      const result = await tryGraphQLFetch(ISSUE_CREATE_QUERY, { issue });
 
-    if (data) {
-      dispatch({
-        type: ISSUE_CREATED,
-        payload: data.addIssue,
-      });
-      onSuccess(data.addIssue);
-      reloadCurrentPageIfNeeded(dispatch, getState, showError);
+      const onSuccess = (data) => {
+        dispatch({
+          type: ISSUE_CREATED,
+          payload: data.addIssue,
+        });
+        onActionSuccess(data.addIssue);
+        reloadCurrentPageIfNeeded(dispatch, getState);
+      };
+
+      handleApiError(result, dispatch, ISSUE_CREATE_ERROR, onSuccess);
+    } catch (error) {
+      dispatch(onError(error.message, ISSUE_CREATE_ERROR));
     }
   };
 }
