@@ -93,7 +93,14 @@ class IssueReport extends Component {
         <Table bordered condensed hover responsive>
           <thead>
             <tr>
-              <th>{' '}</th>
+              <th rowSpan={2}>
+                <p className="text-center">Issue owner</p>
+              </th>
+              <th colSpan={headerColumns.length}>
+                <p className="text-center ">Count by status</p>
+              </th>
+            </tr>
+            <tr>
               {headerColumns}
             </tr>
           </thead>
