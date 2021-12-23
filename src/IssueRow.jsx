@@ -1,54 +1,66 @@
 /* eslint-disable react/prefer-stateless-function */
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   Button, Glyphicon, OverlayTrigger, Tooltip,
 } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import UserContext from './UserContext.jsx';
 import { getIssue, getIssueLoading } from './redux/selectors.js';
+import {
+  issueClose, issueDelete, showSuccessNotificationComponent,
+} from './redux/actions.js';
 
-class IssueRowPlain extends React.Component {
-  render() {
-    const {
-      issue,
-      location: { search },
-      closeIssue,
-      deleteIssue,
-      isLoading,
-    } = this.props;
+import './components/toatsComponents/IssueRestore.jsx';
 
-    const { user } = this.context;
+function IssueRowPlain({
+  issueId,
+  location: { search, pathname },
+  history,
+}) {
+  const { user } = useContext(UserContext);
+  const issue = useSelector(state => getIssue(state, issueId));
+  const isLoading = useSelector(state => getIssueLoading(state, issueId));
+  const dispatch = useDispatch();
 
-    const selectLocation = { pathname: `/issues/${issue.id}`, search };
-    const showCloseTooltip = (
-      <Tooltip id="close-tooltip">Close Issue</Tooltip>
-    );
-    const showDeleteTooltip = (
-      <Tooltip id="delete-tooltip">Delete Issue</Tooltip>
-    );
-    const showEditTooltip = (
-      <Tooltip id="edit-tooltip">Edit Issue</Tooltip>
-    );
+  const selectLocation = { pathname: `/issues/${issue.id}`, search };
+  const showCloseTooltip = (
+    <Tooltip id="close-tooltip">Close Issue</Tooltip>
+  );
+  const showDeleteTooltip = (
+    <Tooltip id="delete-tooltip">Delete Issue</Tooltip>
+  );
+  const showEditTooltip = (
+    <Tooltip id="edit-tooltip">Edit Issue</Tooltip>
+  );
 
-    const onClose = (e, id) => {
-      e.preventDefault();
-      closeIssue(id);
+  const onClose = (e) => {
+    e.preventDefault();
+    dispatch(issueClose(issueId));
+  };
+
+  const onDelete = (e) => {
+    e.preventDefault();
+
+    const onSuccess = () => {
+      dispatch(showSuccessNotificationComponent('IssueRestore', { issueId }));
+
+      if (pathname === `/issues/${issueId}`) {
+        history.push({ pathname: '/issues', search });
+      }
     };
+    dispatch(issueDelete(issueId, onSuccess));
+  };
 
-    const onDelete = (e, id) => {
-      e.preventDefault();
-      deleteIssue(id);
-    };
-
-    const isCloseDisabled = issue.status === 'Closed'
+  const isCloseDisabled = issue.status === 'Closed'
       || !user.signedIn
       || isLoading;
 
-    const isDeleteDisabled = !user.signedIn || isLoading;
+  const isDeleteDisabled = !user.signedIn || isLoading;
 
-    const tableRow = (
+  return (
+    <LinkContainer to={selectLocation}>
       <tr>
         <td>{issue.id}</td>
         <td>{issue.status}</td>
@@ -69,7 +81,7 @@ class IssueRowPlain extends React.Component {
             <Button
               type="button"
               bsSize="xsmall"
-              onClick={(e) => { onClose(e, issue.id); }}
+              onClick={onClose}
               disabled={isCloseDisabled}
             >
               <Glyphicon glyph="remove" />
@@ -79,7 +91,7 @@ class IssueRowPlain extends React.Component {
             <Button
               type="button"
               bsSize="xsmall"
-              onClick={(e) => { onDelete(e, issue.id); }}
+              onClick={onDelete}
               disabled={isDeleteDisabled}
             >
               <Glyphicon glyph="trash" />
@@ -87,25 +99,8 @@ class IssueRowPlain extends React.Component {
           </OverlayTrigger>
         </td>
       </tr>
-    );
-
-    return (
-      <LinkContainer to={selectLocation}>
-        {tableRow}
-      </LinkContainer>
-    );
-  }
+    </LinkContainer>
+  );
 }
 
-IssueRowPlain.contextType = UserContext;
-
-// TODO: [react-redux] [move-methods] Move issue actions from IssueList to IssueRow.
-const mapStateToProps = (state, { issueId: id }) => ({
-  issue: getIssue(state, id),
-  isLoading: getIssueLoading(state, id),
-});
-const Connected = connect(mapStateToProps)(IssueRowPlain);
-
-const IssueRow = withRouter(Connected);
-delete IssueRow.contextType;
-export default IssueRow;
+export default withRouter(IssueRowPlain);

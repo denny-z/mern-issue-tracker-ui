@@ -6,6 +6,7 @@ import {
   getNotifcationMessage, isNotificationError, needShowError,
 } from '../redux/selectors.js';
 import Toast from '../Toast.jsx';
+import dynamicComponents from './dynamicComponents.js';
 
 export default function ToastGlobal() {
   const message = useSelector(getNotifcationMessage);
@@ -19,7 +20,9 @@ export default function ToastGlobal() {
   const dispatch = useDispatch();
   const hide = () => dispatch(hideNotification());
 
-  const content = component ? React.createElement(component.name, component.props) : message;
+  const content = component
+    ? React.createElement(dynamicComponents[component.name], component.props)
+    : message;
 
   return (
     <Toast needShow={needShow} bsStyle={bsStyle} onDismiss={hide}>

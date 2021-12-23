@@ -2,25 +2,24 @@ import React from 'react';
 import {
   Table,
 } from 'react-bootstrap';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import IssueRow from './IssueRow.jsx';
 import { getCurrentPageIssueIds } from './redux/selectors.js';
 
-function IssueTable(props) {
-  const { issueIds, closeIssue, deleteIssue } = props;
+function IssueTable() {
+  const issueIds = useSelector(getCurrentPageIssueIds);
+  if (issueIds.length === 0) {
+    return (<h3>There are no issues for now ;)</h3>);
+  }
+
   const issuesList = issueIds.map((
     issueId => (
       <IssueRow
         key={issueId}
         issueId={issueId}
-        closeIssue={closeIssue}
-        deleteIssue={deleteIssue}
       />
     )));
 
-  if (issueIds.length === 0) {
-    return (<h3>There are no issues for now ;)</h3>);
-  }
 
   return (
     <Table bordered condensed hover responsive>
@@ -43,7 +42,4 @@ function IssueTable(props) {
   );
 }
 
-const mapStateToProps = state => ({
-  issueIds: getCurrentPageIssueIds(state),
-});
-export default connect(mapStateToProps)(IssueTable);
+export default IssueTable;

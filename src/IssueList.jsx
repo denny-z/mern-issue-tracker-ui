@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Panel } from 'react-bootstrap';
+import { Panel } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
@@ -7,20 +7,13 @@ import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
 import PagintationWithSections from './PaginationWithSections.jsx';
 import {
-  issueClose, issueDelete, issueRestore, loadIssuePreview, initLoadIssues,
+  loadIssuePreview, initLoadIssues,
 } from './redux/actions.js';
 import { getCurrentIdentity, getIssueListIsError, getIssueListLoading } from './redux/selectors.js';
 
 class IssueList extends React.Component {
   static async fetchData(match, search) {
     return initLoadIssues(match, search);
-  }
-
-  constructor() {
-    super();
-    this.closeIssue = this.closeIssue.bind(this);
-    this.deleteIssue = this.deleteIssue.bind(this);
-    this.restoreIssue = this.restoreIssue.bind(this);
   }
 
   componentDidMount() {
@@ -74,40 +67,6 @@ class IssueList extends React.Component {
     dispatch(loadIssuePreview(parseInt(id, 10)));
   }
 
-  async closeIssue(id) {
-    const { dispatch } = this.props;
-    dispatch(issueClose(id));
-  }
-
-  async deleteIssue(id) {
-    const { showSuccess, dispatch } = this.props;
-
-    const onSuccess = () => {
-      const undoMessage = (
-        <span>
-          {`Deleted issue ${id} successfully.`}
-          <Button bsStyle="link" onClick={() => this.restoreIssue(id)}>
-            UNDO
-          </Button>
-        </span>
-      );
-      showSuccess(undoMessage);
-
-      const { history, location: { pathname, search } } = this.props;
-      if (pathname === `/issues/${id}`) {
-        history.push({ pathname: '/issues', search });
-      }
-    };
-
-    dispatch(issueDelete(id, onSuccess));
-  }
-
-  restoreIssue(id) {
-    const { showSuccess, dispatch } = this.props;
-    const showSuccessWithMessage = () => showSuccess(`Issue ${id} restored successfully.`);
-    dispatch(issueRestore(id, showSuccessWithMessage));
-  }
-
   render() {
     const { isLoading, isError } = this.props;
 
@@ -139,8 +98,7 @@ class IssueList extends React.Component {
             <IssueFilter urlBase="/issues" />
           </Panel.Body>
         </Panel>
-        {/* TODO: [react-redux] [move-methods] Move issue actions from IssueList to IssueRow. */}
-        <IssueTable closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
+        <IssueTable />
         <IssueDetail />
         <PagintationWithSections search={search} />
       </React.Fragment>
