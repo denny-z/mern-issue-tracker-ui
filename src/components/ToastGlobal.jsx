@@ -1,24 +1,29 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { hideError } from '../redux/actions.js';
+import { hideNotification } from '../redux/actions.js';
 import {
-  getErrorMessage, needShowError,
+  getComponentNotification,
+  getNotifcationMessage, isNotificationError, needShowError,
 } from '../redux/selectors.js';
 import Toast from '../Toast.jsx';
 
 export default function ToastGlobal() {
-  const bsStyle = 'danger';
-  const errorMessage = useSelector(getErrorMessage);
+  const message = useSelector(getNotifcationMessage);
+  const component = useSelector(getComponentNotification);
+
   const needShow = useSelector(needShowError);
+  const isError = useSelector(isNotificationError);
+
+  const bsStyle = isError ? 'danger' : 'success';
 
   const dispatch = useDispatch();
-  const hide = () => dispatch(hideError());
+  const hide = () => dispatch(hideNotification());
+
+  const content = component ? React.createElement(component.name, component.props) : message;
 
   return (
     <Toast needShow={needShow} bsStyle={bsStyle} onDismiss={hide}>
-      <>
-        {errorMessage}
-      </>
+      <>{content}</>
     </Toast>
   );
 }

@@ -39,18 +39,19 @@ import {
   ISSUES_LIST_CACHE_RESET,
   ERROR_GENERAL,
   STATS_LOAD_ERROR,
-  ERROR_HIDE,
+  HIDE_NOTIFICATION,
   ISSUES_LIST_LOAD_ERROR,
   ISSUE_LOAD_ERROR,
   ISSUE_UPDATE_ERROR,
   ISSUE_CREATE_ERROR,
   ISSUE_DELETE_ERROR,
   ISSUE_RESTORE_ERROR,
+  SUCCESS_NOTIFICATION,
 } from './types.js';
 
-export function hideError() {
+export function hideNotification() {
   return {
-    type: ERROR_HIDE,
+    type: HIDE_NOTIFICATION,
   };
 }
 
@@ -60,6 +61,24 @@ function onError(errorMessage, type = ERROR_GENERAL) {
       type,
       error: { errorMessage },
     });
+  };
+}
+
+export function showSuccessNotification(message, type = SUCCESS_NOTIFICATION) {
+  return {
+    type,
+    payload: { message },
+  };
+}
+
+export function showSuccessNotificationComponent(componentName, componentProps, isError = false) {
+  return {
+    type: SUCCESS_NOTIFICATION,
+    component: {
+      name: componentName,
+      props: componentProps,
+    },
+    payload: { isError },
   };
 }
 

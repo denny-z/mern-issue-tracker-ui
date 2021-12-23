@@ -64,10 +64,18 @@ export function getJumpToDeletedActionIndex(state) {
   return state.issuesUI.lastDeletedActionIndex;
 }
 
-export function getErrorMessage(state) {
-  return state.notification.errorMessage;
+export function getNotifcationMessage(state) {
+  return state.notification.message;
 }
 
 export function needShowError(state) {
   return state.notification.needShow;
+}
+
+export function isNotificationError(state) {
+  return state.notification.isError;
+}
+
+export function getComponentNotification(state) {
+  return state.notification.component;
 }
