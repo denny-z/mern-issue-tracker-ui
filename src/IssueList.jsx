@@ -100,8 +100,6 @@ class IssueList extends React.Component {
     };
 
     dispatch(issueDelete(id, onSuccess));
-    // TODO: [react-redux] fix it.
-    // Handle case when server side returned data.deletedIssue === false.
   }
 
   restoreIssue(id) {
