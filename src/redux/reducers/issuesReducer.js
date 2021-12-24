@@ -68,7 +68,6 @@ export default function issuesReducer(state = initialState, { payload: p, type }
         all: newIssues,
       };
     }
-    // TODO: [react-redux] fix it. Handle when issue is not found in state.all.
     case ISSUE_UPDATED: {
       const newIssue = p.issueUpdate;
       const newIssues = [...state.all];

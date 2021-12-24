@@ -292,13 +292,14 @@ export function updateIssue(issue, onActionSuccess) {
   };
 }
 
-// TODO: [react-redux] fix it.
-// Handle error when issue by id is not found as it was implemented before redux add.
 export function issueClose(id) {
   return async (dispatch, getState) => {
     try {
       const vars = { id };
       const issueBeforeUpdate = getIssue(getState(), id);
+      if (issueBeforeUpdate == null) {
+        throw new Error(`Issue #${id} not found`);
+      }
       dispatch({ type: ISSUE_LOADING, payload: vars });
 
       const result = await tryGraphQLFetch(ISSUE_CLOSE_QUERY, vars);
@@ -323,10 +324,10 @@ export function issueClose(id) {
   };
 }
 
-// TODO: [react-redux] fix it. Handle when issue is not found in state.all.
 // TODO: [react-redux] fix LOW bug. Total pages count does not refresh on prev page
 //   when last issue from the current page.
-// IDEA: [react-redux] Trigger page reload when the last issue in state.all deleted.
+// IDEA: [react-redux] Reload issues by current page or show issues from next page
+//   when last issue on page is deleted.
 export function issueDelete(id, onActionSuccess) {
   return async (dispatch, getState) => {
     try {
