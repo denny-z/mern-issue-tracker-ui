@@ -9,8 +9,8 @@ There are two repos for the project: API (see [issue-tracker GitHub project](htt
 ## Try out
 
 Project is hosted on Heroku (since ~Nov-24 2021):
-- with custom domain: http://ui.issue-tracker-denny.fun/ - _the domain may be expired on Dec 2022, so you may want to try next option_;
-- Heroku domain: http://tracker-ui-denny-z.herokuapp.com 
+- with custom domain: http://ui-staging.issue-tracker-denny.fun/ - _the domain may be expired on Dec 2022, so you may want to try next option_;
+- ~~Heroku domain http://tracker-ui-denny-z-staging.herokuapp.com~~ - _on Feb 2022 there is issue with SSL, checkout next time_.
 
 ## Key features
 
