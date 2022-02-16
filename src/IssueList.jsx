@@ -1,228 +1,92 @@
-import URLSearchParams from 'url-search-params';
 import React from 'react';
-import { Button, Panel } from 'react-bootstrap';
-import graphQLFetch from './graphQLFetch.js';
+import { Panel } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
 import IssueDetail from './IssueDetail.jsx';
 import withToast from './withToast.jsx';
-import store from './store.js';
-import prepareIssueFilterVars from './prepareIssueFilterVars.js';
 import PagintationWithSections from './PaginationWithSections.jsx';
+import {
+  loadIssuePreview, initLoadIssues,
+} from './redux/actions.js';
+import { getCurrentIdentity, getIssueListIsError, getIssueListLoading } from './redux/selectors.js';
 
 class IssueList extends React.Component {
-  static async fetchData(match, search, showError) {
-    const params = new URLSearchParams(search);
-    const vars = { hasSelection: false, selectedId: 0 };
-    Object.assign(vars, prepareIssueFilterVars(params));
-
-    const { params: { id } } = match;
-    const idInt = parseInt(id, 10);
-    if (!Number.isNaN(idInt)) {
-      vars.hasSelection = true;
-      vars.selectedId = idInt;
-    }
-    let page = params.get('page', 10);
-    if (Number.isNaN(page)) page = 1;
-    vars.page = page;
-
-    const query = `
-      query IssueList(
-        $status: StatusType,
-        $effortMin: Int,
-        $effortMax: Int,
-        $hasSelection: Boolean!,
-        $selectedId: Int!,
-        $page: Int
-      ){
-        issuesList(
-          status: $status
-          effortMin: $effortMin
-          effortMax: $effortMax
-          page: $page
-        ) {
-          issues { 
-            id
-            title
-            owner
-            status
-            created
-            effort
-            due
-          }
-          pages
-        }
-        
-        issue(id: $selectedId) @include (if: $hasSelection) {
-          id 
-          description
-        }
-      }
-    `;
-
-    const data = await graphQLFetch(query, vars, showError);
-    return data;
-  }
-
-  constructor() {
-    super();
-    this.closeIssue = this.closeIssue.bind(this);
-    this.deleteIssue = this.deleteIssue.bind(this);
-    this.restoreIssue = this.restoreIssue.bind(this);
-
-    const initialData = store.initialData || { issuesList: {} };
-    const {
-      issuesList: { issues, pages: totalPages }, issue: selectedIssue,
-    } = initialData;
-    delete store.initialData;
-
-    this.state = {
-      issues,
-      selectedIssue,
-      totalPages,
-    };
+  static async fetchData(match, search) {
+    return initLoadIssues(match, search);
   }
 
   componentDidMount() {
-    const { issues } = this.state;
-    if (issues == null) this.loadData();
+    this.loadData();
   }
 
   componentDidUpdate(prevProps) {
     const {
       location: { search: prevSearch },
       match: { params: { id: prevId } },
+      pageIdentity: prevPageIdentity,
     } = prevProps;
-    const { location: { search }, match: { params: { id } } } = this.props;
+    const {
+      location: { search },
+      match: { params: { id } },
+      pageIdentity,
+    } = this.props;
 
     const isSearchChanged = prevSearch !== search;
     const isIdChanged = prevId !== id;
+    const isPageIdentityChanged = prevPageIdentity !== pageIdentity;
 
-    if (!isIdChanged && !isSearchChanged) return;
-
-    if (isIdChanged && !isSearchChanged) {
-      this.loadSelectedIssue();
+    if (isSearchChanged || isPageIdentityChanged) {
+      this.loadData();
       return;
     }
 
-    this.loadData();
-  }
-
-  async loadData() {
-    const { match, location: { search }, showError } = this.props;
-    const data = await IssueList.fetchData(match, search, showError);
-    if (data) {
-      this.setState({
-        issues: data.issuesList.issues,
-        totalPages: data.issuesList.pages,
-        selectedIssue: data.issue,
-      });
+    if (!Number.isNaN(parseInt(id, 10)) && isIdChanged) {
+      this.loadSelectedIssue();
     }
   }
 
-  // This function should be used when only selected issue. It will help to reduce
+  // INFO: Store will identify whether need to reload data if needed.
+  async loadData() {
+    const {
+      match, location: { search },
+      dispatch,
+    } = this.props;
+
+    dispatch(initLoadIssues(match, search));
+  }
+
+  // INFO: This function should be used when only selected issue. It will help to reduce
   // network trafic if use loadData, because it fetches issuesList too.
   async loadSelectedIssue() {
-    const query = `
-      query SelectedIssue($id: Int!) {
-        issue(id: $id) {
-          id description
-        }
-      }
-    `;
-    const { match: { params: { id } }, showError } = this.props;
-    const vars = { id };
+    const {
+      match: { params: { id } },
+      dispatch,
+    } = this.props;
 
-    const data = await graphQLFetch(query, vars, showError);
-    if (data) this.setState({ selectedIssue: data.issue });
-  }
-
-  async closeIssue(id) {
-    const query = `
-      mutation CloseIssue($id: Int!) {
-        updateIssue(id: $id, changes: { status: Closed }) {
-          id
-          title
-          status
-          owner
-          effort
-          created
-          due
-          description
-        }
-      }
-    `;
-
-    const { showError } = this.props;
-    const data = await graphQLFetch(query, { id }, showError);
-    if (data) {
-      this.setState((prevState) => {
-        const newList = [...prevState.issues];
-        const issueIndex = newList.findIndex(issue => issue.id === id);
-        if (issueIndex === -1) {
-          showError(`Looks like the list in not in sync. Was not able to find issue ID ${id}. Refreshing list...`);
-          this.loadData();
-          return { issues: [] };
-        }
-        newList[issueIndex] = data.updateIssue;
-        return { issues: newList };
-      });
-    } else {
-      this.loadData();
-    }
-  }
-
-  async deleteIssue(id) {
-    const { showError, showSuccess } = this.props;
-    const query = `
-      mutation DeleteIssue($id: Int!) {
-        deleteIssue(id: $id)
-      }
-    `;
-    const data = await graphQLFetch(query, { id }, showError);
-    const undoMessage = (
-      <span>
-        {`Deleted issue ${id} successfully.`}
-        <Button bsStyle="link" onClick={() => this.restoreIssue(id)}>
-          UNDO
-        </Button>
-      </span>
-    );
-
-    if (data && data.deleteIssue) {
-      this.setState(prevState => ({ issues: prevState.issues.filter(issue => issue.id !== id) }));
-
-      const { location: { pathname, search }, history } = this.props;
-      if (pathname === `/issues/${id}`) {
-        history.push({ pathname: '/issues', search });
-      }
-
-      showSuccess(undoMessage);
-    } else {
-      this.loadData();
-    }
-  }
-
-  async restoreIssue(id) {
-    const query = `mutation RestoreIssue($id: Int!) {
-      issueRestore(id: $id)
-    }`;
-    const { showError, showSuccess } = this.props;
-    const data = await graphQLFetch(query, { id }, showError);
-    if (data && data.issueRestore) {
-      showSuccess(`Issue ${id} restored successfully.`);
-      this.loadData();
-    }
+    dispatch(loadIssuePreview(parseInt(id, 10)));
   }
 
   render() {
-    const { issues } = this.state;
-    if (issues == null) return null;
+    const { isLoading, isError } = this.props;
+
+    // TODO: [ui-features] fix flicking while issues are loading.
+    // Show spinner on top of current table with issues.
+    // TODO: [ui-features] fix jumping of pages when no there are no or <10 issues loaded.
+    if (isLoading) {
+      return (
+        <h2 className="text-center">Loading...</h2>
+      );
+    }
+
+    if (isError) {
+      return (
+        <h2 className="text-center">Sorry, something went wrong...</h2>
+      );
+    }
 
     const { location: { search } } = this.props;
     const hasFilter = search !== '';
-
-    const { selectedIssue, totalPages } = this.state;
 
     return (
       <React.Fragment>
@@ -234,14 +98,20 @@ class IssueList extends React.Component {
             <IssueFilter urlBase="/issues" />
           </Panel.Body>
         </Panel>
-        <IssueTable issues={issues} closeIssue={this.closeIssue} deleteIssue={this.deleteIssue} />
-        <IssueDetail issue={selectedIssue} />
-        <PagintationWithSections search={search} totalPages={totalPages} />
+        <IssueTable />
+        <IssueDetail />
+        <PagintationWithSections search={search} />
       </React.Fragment>
     );
   }
 }
 
-const IssueListWithToast = withToast(IssueList);
-IssueListWithToast.fetchData = IssueList.fetchData;
-export default IssueListWithToast;
+const mapStateToProps = state => ({
+  isLoading: getIssueListLoading(state),
+  isError: getIssueListIsError(state),
+  pageIdentity: getCurrentIdentity(state),
+});
+const Connected = connect(mapStateToProps, null)(IssueList);
+const WithToast = withToast(Connected);
+WithToast.fetchData = IssueList.fetchData;
+export default WithToast;

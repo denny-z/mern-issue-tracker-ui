@@ -1,49 +1,18 @@
 import React, { Component } from 'react';
 import { Panel, Table } from 'react-bootstrap';
-import URLSearchParams from 'url-search-params';
-import graphQLFetch from './graphQLFetch.js';
+import { connect } from 'react-redux';
 import IssueFilter from './IssueFilter.jsx';
-import prepareIssueFilterVars from './prepareIssueFilterVars.js';
-import store from './store.js';
-import withToast from './withToast.jsx';
-
-// IDEA: This can be extracted to a separate file to reuse in other places of application.
-// E.g. select for IssueFilter component
-const STATUSES = Object.freeze(['New', 'Assigned', 'Fixed', 'Closed']);
+import { ISSUE_STATUS_LIST } from './constants.js';
+import { loadStats as loadStatsAction, clearStats as clearStatsAction } from './redux/actions.js';
 
 class IssueReport extends Component {
-  static async fetchData(match, search, showError) {
-    const params = new URLSearchParams(search);
-    const vars = prepareIssueFilterVars(params);
-    const query = `query IssueReport(
-      $status: StatusType
-      $effortMin: Int
-      $effortMax: Int
-    ) {
-      issueCounts(
-        status: $status,
-        effortMin: $effortMin
-        effortMax: $effortMax
-      ) {
-        owner ${STATUSES.join(' ')}
-      }
-    }
-    `;
-
-    const data = await graphQLFetch(query, vars, showError);
-    return data;
-  }
-
-  constructor(props) {
-    super(props);
-    const stats = store.initialData ? store.initialData.issueCounts : null;
-    delete store.initialData;
-    this.state = { stats };
+  static async fetchData(match, search) {
+    return loadStatsAction(search);
   }
 
   componentDidMount() {
-    const { stats } = this.state;
-    if (stats == null) this.loadData();
+    const { isLoaded } = this.props;
+    if (!isLoaded) this.loadData();
   }
 
   componentDidUpdate(prevProps) {
@@ -54,15 +23,22 @@ class IssueReport extends Component {
     }
   }
 
+  componentWillUnmount() {
+    const { clearStats } = this.props;
+    clearStats();
+  }
+
   async loadData() {
-    const { location: { search }, match, showError } = this.props;
-    const data = await IssueReport.fetchData(match, search, showError);
-    if (data) this.setState({ stats: data.issueCounts });
+    const {
+      location: { search }, loadStats,
+    } = this.props;
+
+    loadStats(search);
   }
 
   renderStatRows() {
-    const { stats } = this.state;
-    if (stats == null) return null;
+    const { stats, isLoaded } = this.props;
+    if (!isLoaded) return null;
 
     const result = stats.map((counts) => {
       const { owner, ...statusToCount } = counts;
@@ -73,7 +49,7 @@ class IssueReport extends Component {
       return (
         <tr key={counts.owner}>
           <td>{counts.owner}</td>
-          {STATUSES.map(status => (
+          {ISSUE_STATUS_LIST.map(status => (
             <td key={status}>{counts[status]}</td>
           ))}
           <td>{sumOfCounts}</td>
@@ -84,7 +60,7 @@ class IssueReport extends Component {
     const sumRow = (
       <tr key="__sumOfColumn">
         <td><b><small>Total by status</small></b></td>
-        {STATUSES.map(status => (
+        {ISSUE_STATUS_LIST.map(status => (
           <td key={`__sumOfColumn_${status}`}>
             {stats.reduce((previousValue, counts) => (previousValue + counts[status]), 0)}
           </td>
@@ -98,7 +74,7 @@ class IssueReport extends Component {
   }
 
   render() {
-    const headerColumns = STATUSES.map(status => (
+    const headerColumns = ISSUE_STATUS_LIST.map(status => (
       <th key={status}>{status}</th>
     ));
     headerColumns.push(<th key="__sumOfRow"><small>Total by owner</small></th>);
@@ -117,7 +93,14 @@ class IssueReport extends Component {
         <Table bordered condensed hover responsive>
           <thead>
             <tr>
-              <th>{' '}</th>
+              <th rowSpan={2}>
+                <p className="text-center">Issue owner</p>
+              </th>
+              <th colSpan={headerColumns.length}>
+                <p className="text-center ">Count by status</p>
+              </th>
+            </tr>
+            <tr>
               {headerColumns}
             </tr>
           </thead>
@@ -130,6 +113,16 @@ class IssueReport extends Component {
   }
 }
 
-const IssueReportWithToast = withToast(IssueReport);
-IssueReportWithToast.fetchData = IssueReport.fetchData;
-export default IssueReportWithToast;
+const mapStateToProps = state => ({
+  stats: state.issueCounts.stats,
+  isLoaded: state.issueCounts.isLoaded,
+});
+
+const mapDispatchToProps = dispatch => ({
+  loadStats: search => dispatch(loadStatsAction((search))),
+  clearStats: () => dispatch(clearStatsAction()),
+});
+
+const Connected = connect(mapStateToProps, mapDispatchToProps)(IssueReport);
+Connected.fetchData = IssueReport.fetchData;
+export default Connected;

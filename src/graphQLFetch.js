@@ -7,7 +7,7 @@ function jsonDateReciever(key, value) {
   return value;
 }
 
-export default async function graphQLFetch(query, variables = {}, showError = null, cookie) {
+export async function tryGraphQLFetch(query, variables = {}, cookie) {
   // eslint-disable-next-line no-undef
   const apiEnpoint = __isBrowser__ ? window.ENV.UI_API_ENDPOINT
     : process.env.UI_SERVER_API_ENDPOINT;
@@ -15,24 +15,32 @@ export default async function graphQLFetch(query, variables = {}, showError = nu
   const headers = { 'Content-Type': 'application/json' };
   if (cookie) headers.Cookie = cookie;
 
-  try {
-    const response = await fetch(apiEnpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ query, variables }),
-      credentials: 'include',
-    });
-    const body = await response.text();
-    const result = JSON.parse(body, jsonDateReciever);
+  const response = await fetch(apiEnpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ query, variables }),
+    credentials: 'include',
+  });
+  const body = await response.text();
+  return JSON.parse(body, jsonDateReciever);
+}
 
-    if (result.errors) {
+export function formatErrorToMessage(error) {
+  if (error.extensions.code === 'BAD_USER_INPUT') {
+    const details = (error.extensions.exception.errors || []).join('\n');
+    return `${error.message}:\n${details}`;
+  }
+  return `${error.extensions.code}: ${error.message}`;
+}
+
+export default async function graphQLFetch(query, variables = {}, showError = null, cookie) {
+  try {
+    const result = await tryGraphQLFetch(query, variables, cookie);
+
+    if (result.errors && typeof showError === 'function') {
       const error = result.errors[0];
-      if (error.extensions.code === 'BAD_USER_INPUT') {
-        const details = (error.extensions.exception.errors || []).join('\n');
-        if (showError) showError(`${error.message}:\n${details}`);
-      } else if (showError) {
-        showError(`${error.extensions.code}: ${error.message}`);
-      }
+      const errorMessage = formatErrorToMessage(error);
+      showError(errorMessage);
     }
 
     return result.data;

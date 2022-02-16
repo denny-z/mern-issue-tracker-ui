@@ -8,8 +8,9 @@ import {
   FormGroup,
   Glyphicon, Modal, NavItem, OverlayTrigger, Tooltip,
 } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import graphQLFetch from './graphQLFetch.js';
+import { issueCreate } from './redux/actions.js';
 import UserContext from './UserContext.jsx';
 import withToast from './withToast.jsx';
 
@@ -20,9 +21,12 @@ class IssueAddNavItem extends Component {
     this.showModal = this.showModal.bind(this);
     this.hideModal = this.hideModal.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
 
     this.state = {
       needShowModal: false,
+      owner: '',
+      title: '',
     };
   }
 
@@ -34,30 +38,39 @@ class IssueAddNavItem extends Component {
     this.setState({ needShowModal: false });
   }
 
+  handleInputChange(e) {
+    this.setState({
+      [e.target.name]: e.target.value,
+    });
+  }
+
   async handleSubmit(e) {
     e.preventDefault();
     this.hideModal();
-    const form = document.forms.addIssue;
+
+    const { owner, title } = this.state;
     const issue = {
-      owner: form.owner.value,
-      title: form.title.value,
+      owner,
+      title,
       due: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 10), // 10 days later.
     };
-    const query = `mutation AddIssue($issue: IssueInputs!) {
-      addIssue(issue: $issue) {
-        id
-      }  
-    }`;
-    const { showError } = this.props;
-    const data = await graphQLFetch(query, { issue }, showError);
-    if (data) {
+    const { onCreate } = this.props;
+
+    const onSuccess = (createdIssue) => {
       const { history } = this.props;
-      history.push(`/edit/${data.addIssue.id}`);
-    }
+      this.setState({
+        owner: '',
+        title: '',
+      });
+      history.push(`/edit/${createdIssue.id}`);
+    };
+
+    onCreate(issue, onSuccess);
   }
 
   render() {
     const { needShowModal } = this.state;
+    const { owner, title } = this.state;
     const { user: { signedIn } } = this.context;
 
     return (
@@ -79,12 +92,12 @@ class IssueAddNavItem extends Component {
             <Form name="addIssue">
               <FormGroup>
                 <ControlLabel>Title</ControlLabel>
-                <FormControl autoFocus name="title" />
+                <FormControl autoFocus name="title" value={title} onChange={this.handleInputChange} />
               </FormGroup>
 
               <FormGroup>
                 <ControlLabel>Owner</ControlLabel>
-                <FormControl name="owner" />
+                <FormControl name="owner" value={owner} onChange={this.handleInputChange} />
               </FormGroup>
             </Form>
           </Modal.Body>
@@ -109,4 +122,10 @@ class IssueAddNavItem extends Component {
 IssueAddNavItem.contextType = UserContext;
 const WithRouter = withRouter(IssueAddNavItem);
 delete WithRouter.contextType;
-export default withToast(WithRouter);
+const WithToast = withToast(WithRouter);
+
+const mapDispatchToProps = dispatch => ({
+  onCreate: (issue, onSuccess) => dispatch(issueCreate(issue, onSuccess)),
+});
+const Connected = connect(null, mapDispatchToProps)(WithToast);
+export default Connected;

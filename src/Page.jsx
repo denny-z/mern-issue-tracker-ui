@@ -3,12 +3,13 @@ import {
   Navbar, Nav, NavItem, Glyphicon, NavDropdown, MenuItem, Grid, Col,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
+import ToastGlobal from './components/ToastGlobal.jsx';
 import Contents from './Contents.jsx';
 import graphQLFetch from './graphQLFetch.js';
 import IssueAddNavItem from './IssueAddNavItem.jsx';
 import Search from './Search.jsx';
 import SignInNavItem from './SignInNavItem.jsx';
-import store from './store.js';
+import simpleStore from './store.js';
 import UserContext from './UserContext.jsx';
 
 function NavBar({ onUserChange }) {
@@ -30,7 +31,7 @@ function NavBar({ onUserChange }) {
         </LinkContainer>
       </Nav>
       <Col xs={5}>
-        <Navbar.Form>
+        <Navbar.Form style={{ marginBottom: 0 }}>
           <Search />
         </Navbar.Form>
       </Col>
@@ -76,8 +77,8 @@ export default class Page extends React.Component {
     super(props);
     this.onUserChange = this.onUserChange.bind(this);
 
-    const user = store.userData ? store.userData.user : null;
-    delete store.userData;
+    const user = simpleStore.userData ? simpleStore.userData.user : null;
+    delete simpleStore.userData;
     this.state = { user };
   }
 
@@ -103,6 +104,7 @@ export default class Page extends React.Component {
           <NavBar />
           <Grid fluid>
             <Contents />
+            <ToastGlobal />
           </Grid>
           <Footer />
         </UserContext.Provider>

@@ -1,20 +1,29 @@
 import 'babel-polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 import Page from '../src/Page.jsx';
-import store from '../src/store.js';
-
+import simpleStore from '../src/store.js';
+import store from '../src/redux/store.js';
 
 // eslint-disable-next-line no-underscore-dangle
-store.initialData = window.__INITIAL_DATA__;
+const initialData = window.__INITIAL_DATA__;
 // eslint-disable-next-line no-underscore-dangle
-store.userData = window.__USER_DATA__;
+simpleStore.userData = window.__USER_DATA__;
+
+if (initialData && initialData.type) {
+  store.dispatch(initialData);
+} else {
+  simpleStore.initialData = initialData;
+}
 
 const element = (
   <Router>
-    <Page />
+    <Provider store={store}>
+      <Page />
+    </Provider>
   </Router>
 );
 

@@ -1,15 +1,24 @@
 import React from 'react';
 import { Pagination } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import { LinkContainer } from 'react-router-bootstrap';
 import URLSearchParams from 'url-search-params';
+import { getIssuesPagesCount } from './redux/selectors.js';
 
 const SECTION_SIZE = 5;
 
 function PageLink({
   params, page, activePage, children,
 }) {
-  params.set('page', page);
   if (page === 0) return React.cloneElement(children, { disabled: true });
+
+  // INFO: Remove page=1 from path, as 1-st is default.
+  if (page === 1) {
+    params.delete('page');
+  } else {
+    params.set('page', page);
+  }
+
   return (
     <LinkContainer
       isActive={() => page === activePage}
@@ -20,7 +29,7 @@ function PageLink({
   );
 }
 
-export default function PagintationWithSections({ search, totalPages }) {
+function PagintationWithSections({ search, totalPages }) {
   const params = new URLSearchParams(search);
   let activePage = parseInt(params.get('page'), 10);
   if (Number.isNaN(activePage)) activePage = 1;
@@ -32,7 +41,6 @@ export default function PagintationWithSections({ search, totalPages }) {
 
   const pageLinks = [];
   for (let i = startPageInSection; i <= Math.min(totalPages, endPageInSection); i += 1) {
-    params.set('page', 1);
     pageLinks.push(
       <PageLink key={i} params={params} activePage={activePage} page={i}>
         <Pagination.Item>{i}</Pagination.Item>
@@ -54,3 +62,9 @@ export default function PagintationWithSections({ search, totalPages }) {
     </>
   );
 }
+
+const mapStateToProps = state => ({
+  totalPages: getIssuesPagesCount(state),
+});
+
+export default connect(mapStateToProps)(PagintationWithSections);
